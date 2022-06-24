@@ -1,0 +1,3179 @@
+{
+	"info": {
+		"_postman_id": "ec24b1d8-f767-44f5-9cc1-d3c628ba93bc",
+		"name": "Model Coordination API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Tutorials",
+			"item": [
+				{
+					"name": "Model Sets and Versions",
+					"item": [
+						{
+							"name": "Optional: Prepare Folders and Models",
+							"item": [
+								{
+									"name": "01-GET All Hubs - Find One to Test",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"var body = JSON.parse(responseBody);",
+													"",
+													"var hub_name = pm.environment.get(\"hub_name\");",
+													"for(var index in body[\"data\"]){",
+													"    if(body[\"data\"][index].attributes.name == hub_name){",
+													"        pm.environment.set(\"hub_id\", body[\"data\"][index].id)",
+													"    }",
+													"}",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_domain}}/project/v1/hubs",
+											"host": [
+												"{{base_domain}}"
+											],
+											"path": [
+												"project",
+												"v1",
+												"hubs"
+											]
+										},
+										"description": "Firstly, input the hub name in environment variable hub_name which you want to check."
+									},
+									"response": []
+								},
+								{
+									"name": "02-GET All Projects - Find One to Test",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"var body = JSON.parse(responseBody);",
+													"",
+													"var project_name = pm.environment.get(\"project_name\");",
+													"for(var index in body[\"data\"]){",
+													"    if(body[\"data\"][index].attributes.name == project_name){",
+													"        pm.environment.set(\"project_id\", body[\"data\"][index].id)",
+													"        //model coordination container id = project  id (without b.) ",
+													"        pm.environment.set(\"mc_containter_id\", body[\"data\"][index].id.split('b.')[1]) ",
+													"",
+													"    }",
+													"}",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_domain}}/project/v1/hubs/{{hub_id}}/projects?page[limit]=100",
+											"host": [
+												"{{base_domain}}"
+											],
+											"path": [
+												"project",
+												"v1",
+												"hubs",
+												"{{hub_id}}",
+												"projects"
+											],
+											"query": [
+												{
+													"key": "page[limit]",
+													"value": "100"
+												}
+											]
+										},
+										"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
+									},
+									"response": []
+								},
+								{
+									"name": "03-GET TopFolders - Find Plan Folder",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"var body = JSON.parse(responseBody);",
+													"",
+													"for(var index in body[\"data\"]){",
+													"    if(body[\"data\"][index].type == \"folders\" && body[\"data\"][index].attributes.name == \"Plans\"){",
+													"        pm.environment.set(\"plan_folder_id\", body[\"data\"][index].id)",
+													"    }",
+													"}",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{base_domain}}/project/v1/hubs/{{hub_id}}/projects/{{project_id}}/topFolders",
+											"host": [
+												"{{base_domain}}"
+											],
+											"path": [
+												"project",
+												"v1",
+												"hubs",
+												"{{hub_id}}",
+												"projects",
+												"{{project_id}}",
+												"topFolders"
+											]
+										},
+										"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
+									},
+									"response": []
+								},
+								{
+									"name": "04-Create SubFolder in Plan Folder",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"var body = JSON.parse(responseBody);",
+													"",
+													"pm.environment.set(\"sub_folder_id\", body[\"data\"].id)",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/vnd.api+json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n        \"jsonapi\": {\n          \"version\": \"1.0\"\n        },\n        \"data\": {\n          \"type\": \"folders\",\n          \"attributes\": {\n            \"name\": \"{{subfolder_name}}\",\n            \"extension\": {\n              \"type\": \"folders:autodesk.bim360:Folder\",\n              \"version\": \"1.0\"\n            }\n          },\n          \"relationships\": {\n            \"parent\": {\n              \"data\": {\n                \"type\": \"folders\",\n                \"id\": \"{{plan_folder_id}}\"\n              }\n            }\n          }\n        }\n      }"
+										},
+										"url": {
+											"raw": "{{base_domain}}/data/v1/projects/{{project_id}}/folders",
+											"host": [
+												"{{base_domain}}"
+											],
+											"path": [
+												"data",
+												"v1",
+												"projects",
+												"{{project_id}}",
+												"folders"
+											]
+										},
+										"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
+									},
+									"response": []
+								},
+								{
+									"name": "05-Create Storage in SubFolder for First File",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"var body = JSON.parse(responseBody);",
+													"var first_file_urn = body[\"data\"].id",
+													"pm.environment.set(\"first_file_urn\", first_file_urn)",
+													"var first_file_guid = first_file_urn.split(\"/\")[1]",
+													"pm.environment.set(\"first_file_guid\", first_file_guid)",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"type": "text",
+												"value": "application/vnd.api+json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n        \"jsonapi\": {\n          \"version\": \"1.0\"\n        },\n        \"data\": {\n          \"type\": \"objects\",\n          \"attributes\": {\n            \"name\": \"{{first_file_name}}\"\n          },\n          \"relationships\": {\n            \"target\": {\n              \"data\": {\n                \"type\": \"folders\",\n                \"id\": \"{{sub_folder_id}}\"\n              }\n            }\n          }\n        }\n      }"
+										},
+										"url": {
+											"raw": "{{base_domain}}/data/v1/projects/{{project_id}}/storage",
+											"host": [
+												"{{base_domain}}"
+											],
+											"path": [
+												"data",
+												"v1",
+												"projects",
+												"{{project_id}}",
+												"storage"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "06-Upload First File to SubFolder",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "file",
+											"file": {}
+										},
+										"url": {
+											"raw": "{{base_domain}}/oss/v2/buckets/wip.dm.prod/objects/{{first_file_guid}}",
+											"host": [
+												"{{base_domain}}"
+											],
+											"path": [
+												"oss",
+												"v2",
+												"buckets",
+												"wip.dm.prod",
+												"objects",
+												"{{first_file_guid}}"
+											]
+										},
+										"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
+									},
+									"response": []
+								},
+								{
+									"name": "06-Create Item for First File",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"data\": {\n    \"type\": \"items\",\n    \"attributes\": {\n      \"displayName\": \"{{first_file_name}}\",\n      \"extension\": {\n        \"type\": \"items:autodesk.bim360:File\",\n        \"version\": \"1.0\"\n      }\n    },\n    \"relationships\": {\n      \"tip\": {\n        \"data\": {\n          \"type\": \"versions\",\n          \"id\": \"1\"\n        }\n      },\n      \"parent\": {\n        \"data\": {\n          \"type\": \"folders\",\n          \"id\": \"{{sub_folder_id}}\"\n        }\n      }\n    }\n  },\n  \"included\": [\n    {\n      \"type\": \"versions\",\n      \"id\": \"1\",\n      \"attributes\": {\n        \"name\": \"{{first_file_name}}\",\n        \"extension\": {\n          \"type\": \"versions:autodesk.bim360:File\",\n          \"version\": \"1.0\"\n        }\n      },\n      \"relationships\": {\n        \"storage\": {\n          \"data\": {\n            \"type\": \"objects\",\n            \"id\": \"{{first_file_urn}}\"\n          }\n        }\n      }\n    }\n  ]\n}"
+										},
+										"url": {
+											"raw": "{{base_domain}}/data/v1/projects/{{project_id}}/items",
+											"host": [
+												"{{base_domain}}"
+											],
+											"path": [
+												"data",
+												"v1",
+												"projects",
+												"{{project_id}}",
+												"items"
+											]
+										},
+										"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
+									},
+									"response": []
+								},
+								{
+									"name": "07-Create Storage in SubFolder for Second File",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"var body = JSON.parse(responseBody);",
+													"var second_file_urn = body[\"data\"].id",
+													"pm.environment.set(\"second_file_urn\", second_file_urn)",
+													"var second_file_guid = second_file_urn.split(\"/\")[1]",
+													"pm.environment.set(\"second_file_guid\", second_file_guid)",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"type": "text",
+												"value": "application/vnd.api+json"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n        \"jsonapi\": {\n          \"version\": \"1.0\"\n        },\n        \"data\": {\n          \"type\": \"objects\",\n          \"attributes\": {\n            \"name\": \"{{second_file_name}}\"\n          },\n          \"relationships\": {\n            \"target\": {\n              \"data\": {\n                \"type\": \"folders\",\n                \"id\": \"{{sub_folder_id}}\"\n              }\n            }\n          }\n        }\n      }"
+										},
+										"url": {
+											"raw": "{{base_domain}}/data/v1/projects/{{project_id}}/storage",
+											"host": [
+												"{{base_domain}}"
+											],
+											"path": [
+												"data",
+												"v1",
+												"projects",
+												"{{project_id}}",
+												"storage"
+											]
+										},
+										"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
+									},
+									"response": []
+								},
+								{
+									"name": "08-Upload Second File to SubFolder",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "file",
+											"file": {}
+										},
+										"url": {
+											"raw": "{{base_domain}}/oss/v2/buckets/wip.dm.prod/objects/{{second_file_guid}}",
+											"host": [
+												"{{base_domain}}"
+											],
+											"path": [
+												"oss",
+												"v2",
+												"buckets",
+												"wip.dm.prod",
+												"objects",
+												"{{second_file_guid}}"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "06-Create Item for Second File",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Content-Type",
+												"value": "application/json",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"data\": {\n    \"type\": \"items\",\n    \"attributes\": {\n      \"displayName\": \"{{second_file_name}}\",\n      \"extension\": {\n        \"type\": \"items:autodesk.bim360:File\",\n        \"version\": \"1.0\"\n      }\n    },\n    \"relationships\": {\n      \"tip\": {\n        \"data\": {\n          \"type\": \"versions\",\n          \"id\": \"1\"\n        }\n      },\n      \"parent\": {\n        \"data\": {\n          \"type\": \"folders\",\n          \"id\": \"{{sub_folder_id}}\"\n        }\n      }\n    }\n  },\n  \"included\": [\n    {\n      \"type\": \"versions\",\n      \"id\": \"1\",\n      \"attributes\": {\n        \"name\": \"{{second_file_name}}\",\n        \"extension\": {\n          \"type\": \"versions:autodesk.bim360:File\",\n          \"version\": \"1.0\"\n        }\n      },\n      \"relationships\": {\n        \"storage\": {\n          \"data\": {\n            \"type\": \"objects\",\n            \"id\": \"{{second_file_urn}}\"\n          }\n        }\n      }\n    }\n  ]\n}"
+										},
+										"url": {
+											"raw": "{{base_domain}}/data/v1/projects/{{project_id}}/items",
+											"host": [
+												"{{base_domain}}"
+											],
+											"path": [
+												"data",
+												"v1",
+												"projects",
+												"{{project_id}}",
+												"items"
+											]
+										},
+										"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Step1:Creating model sets",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"jobId\", body[\"jobId\"])",
+											"pm.environment.set(\"modelset_id\", body[\"modelSetId\"])"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n   \"name\": \"{{modelset_name}}\",\n  \"description\": \"this is a modelset created by postman\",\n  \"isDisabled\": true,\n  \"folders\": [\n    {\n      \"folderUrn\": \"{{sub_folder_id}}\"\n    }\n  ]\n}"
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-create-model-set-POST/\n\nCreate a Model Set within a given Container specifying the Folder which will be used to determine the set of Model Document lineages comprising the Model Set.\n\n\n1. get a folder urn from other APIs of Data Managemen firstly, and input it as body param [folderUrn]. Ensure this user has write permissions of the folder\n2. provide the custom name [name] of the new modelset\n3. after posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [GET jobs/:jobId]"
+							},
+							"response": []
+						},
+						{
+							"name": "Step2: GET jobs/:jobId",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/jobs/{{jobId}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"jobs",
+										"{{jobId}}"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-container-job-by-container-GET/\n\nRetrieves information about a given container job.\n\nThe current job status. Possible values: Failed, Running, Succeeded, Archived"
+							},
+							"response": []
+						},
+						{
+							"name": "Step2: Querying model sets - get first model set",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"modelSetId\", body[\"modelSets\"][0].modelSetId)"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}} /modelsets",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}} ",
+										"modelsets"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-model-sets-GET/\n\nGets a list of model sets in a given container which match the provided search parameters. In default, non-active modelset will bt ignored. The param [includeDisabled] can tell whether or not to include disabled model sets.\n\n\nThe first modelset ID will be set to [modelSetId] for other endpoints use. Manually change to the id of other modelset if needed."
+							},
+							"response": []
+						},
+						{
+							"name": "Querying model set versions",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"version\", body[\"modelSetVersions\"][0].version)"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/versions",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"versions"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-model-set-versions-GET/\n\nGets a list of versions of a given model set.\n\nThe first modelset version id will be set to [version] for other endpoints use. Manually change to the id of other modelset version if needed."
+							},
+							"response": []
+						},
+						{
+							"name": "Controlling automatic model set version creation",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"jobId\", body[\"jobId\"])"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/versions:disable",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"versions:disable"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-disable-model-set-versions-PATCH/\n\nDisables automatic version creation for a given model set. After posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]\n\n\n\nIf enabled, model set version creation will be triggered when the model set’s folders’ content changes, or if a call is explicitly made to the ‘Create Model Set Version’ endpoint. If disabled, only an explicit call to the ‘Create Model Set Version’ endpoint will trigger new version creation.\n\nThe response contains information about the created model set job."
+							},
+							"response": []
+						},
+						{
+							"name": "Manually creating a model set version",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"jobId\", body[\"jobId\"])",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n   \n}"
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/versions",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"versions"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-create-model-set-version-POST/\n\nRequests that the Model Coordination system creates a new version of a given model set.\n\nNote that this operation is not guaranteed to result in a new version of the model set being generated. If the folder contents have not changed, or the change does not necessitate a new model set version (e.g. the changed models are not valid for use in Model Coordination) then no new model set version will be created.\n\nAfter posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]"
+							},
+							"response": []
+						},
+						{
+							"name": "GET modelsets/:modelSetId/jobs/:jobId",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/jobs/{{jobId}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"jobs",
+										"{{jobId}}"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-model-set-job-GET/\n\nRetrieves information about a given model set job."
+							},
+							"response": []
+						}
+					],
+					"description": "This is a test script following with the tutorial: https://forge.autodesk.com/en/docs/bim360/v1/tutorials/model-coordination/mc-tutorial-model-set/\n\nIt assumes one test subfolder has been created under Plan folder, and some models have been uploaded to this subfolder. you can either do the job manually in BIM 360 UI, or by the [Optional: Prepare Folders and Models] scripts collection.\n\nRequired Enviroement Variables:\n1. mc_container_id: the container if of model coordination (= project id of BIM 360 , without 'b.)\n2. modelset_name: name for the new model set  \n3. sub_folder_id: id of one suubfolder under Plan (from other scripts)\n\nIf working with [Optional: Prepare Folders and Models] scripts collection, more enviroement variables are required:\n\n1. hub_name: the hub to do the test\n2. project_name: the project to do the test\n3. first_file_name: first file to be uploaded to the subfolder\n4. second_file_name: second file to be uploaded to the subfolder\n\n",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Model Set Version Clash",
+					"item": [
+						{
+							"name": "Step 1: Get the latest Model Set Version",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"modelset_v_id\", body[\"version\"])"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/versions/latest",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"versions",
+										"latest"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-model-set-version-latest-GET/\n\nGets the latest version of a given model set based on the model set’s ID.\n\nThe  latest modelset version id will be set to [version] for other endpoints use."
+							},
+							"response": []
+						},
+						{
+							"name": "Step 2: Get the Clash Tests for the Model Set Version",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"test_id\", body[\"tests\"][0].id)"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/versions/{{version}}/tests",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{clash_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"versions",
+										"{{version}}",
+										"tests"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-clash-service-v3-get-model-set-version-clash-tests-GET/\n\nGets a list of summaries for all clash tests which have been executed for a given model set version. If no tests have yet been completed for the specified model set version then no tests will returned. \nThe first test id is set to [test_id] for other endpoints use. Change the id of other test if needed."
+							},
+							"response": []
+						},
+						{
+							"name": "Step 3: Get the Clash Test Result Resource URLs",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_container_id}}/tests/{{test_id}}/resources",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{clash_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"tests",
+										"{{test_id}}",
+										"resources"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-clash-service-v3-get-clash-test-resources-GET/\n\nGets information about a given clash test’s result resources.\nclick url to open another tab of endpoint, click [Send] to download the contents of the file. large file, better download as file"
+							},
+							"response": []
+						}
+					],
+					"description": "This is a test script following with the tutorial: https://forge.autodesk.com/en/docs/bim360/v1/tutorials/model-coordination/mc-tutorial-clash/\n\nIt assumes one modelset with clash test have been completed. \n\nRequired Enviroement Variables:\nmc_container_id: the container if of model coordination (= project id of BIM 360 , without 'b.')\nmodelSetId: one model set id of model coordination (from other scripts) ",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Model Index Properties Indexing - by Model Properties API Copy",
+					"item": [
+						{
+							"name": "POST build index with query",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Specify index (batch-status), Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"find index id: \", function () {",
+											"    var body = JSON.parse(responseBody);",
+											"    var find = body.indexes ",
+											"    ",
+											"    if(pm.expect(find).not.eq(undefined) &&  find.length==2){  ",
+											"        //get index id ",
+											"        var first_model_version_index_id = find[0].indexId;",
+											"        var second_model_version_index_id = find[1].indexId; ",
+											"",
+											"        pm.environment.set(\"one_model_version_index_id\",  first_model_version_index_id);",
+											"         pm.environment.set(\"first_model_version_index_id\",  first_model_version_index_id);",
+											"        pm.environment.set(\"second_model_version_index_id\",  second_model_version_index_id); ",
+											"    }  ",
+											"});  ",
+											" "
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"versions\": [\n        {\n            \"versionUrn\": \"urn:adsk.wipprod:fs.file:vf.wfcW987wTMi2ZuEKr-THuw?version=1\",\n             \"query\": {\n          \"$and\": [\n            {\n              \"$gt\": [{ \"$count\": \"s.views\" }, 0]\n            }\n          ]\n        }\n \n        },\n        {\n            \"versionUrn\": \"urn:adsk.wipprod:fs.file:vf.9FVvCp9mSQaMP4mY2lFRFQ?version=1\",\n             \"query\": {\n          \"$and\": [\n            {\n              \"$gt\": [{ \"$count\": \"s.views\" }, 0]\n            }\n          ]\n        }\n \n        }        \n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_domain}}/construction/index/v2/projects/{{mc_container_id}}/indexes:batch-status",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"construction",
+										"index",
+										"v2",
+										"projects",
+										"{{mc_container_id}}",
+										"indexes:batch-status"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Poll for progress of query",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);\r",
+											"pm.collectionVariables.set(\"current_manifest_url\", jsonData.manifestUrl);\r",
+											"pm.collectionVariables.set(\"current_fields_url\", jsonData.fieldsUrl);\r",
+											"pm.collectionVariables.set(\"current_properties_url\", jsonData.propertiesUrl);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/construction/index/v2/projects/{{mc_container_id}}/indexes/{{one_model_version_index_id}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"construction",
+										"index",
+										"v2",
+										"projects",
+										"{{mc_container_id}}",
+										"indexes",
+										"{{one_model_version_index_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET index manifest",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Download the manifest, Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{current_manifest_url}}",
+									"host": [
+										"{{current_manifest_url}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET Download index fields",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Download the fields, Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{current_fields_url}}",
+									"host": [
+										"{{current_fields_url}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET Download query properties",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Download the raw index, Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{current_properties_url}}",
+									"host": [
+										"{{current_properties_url}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "API References",
+			"item": [
+				{
+					"name": "Model Set",
+					"item": [
+						{
+							"name": "POST modelsets",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"jobId\", body[\"jobId\"])",
+											"pm.environment.set(\"modelSetId\", body[\"modelSetId\"])"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n   \"name\": \"ModelSet_Created_ByPostman\",\n  \"description\": \"This is created by postman script\",\n  \"isDisabled\": true,\n  \"folders\": [\n    {\n      \"folderUrn\": \"{{folderUrn}}\" \n    }\n  ]\n}"
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-create-model-set-POST/\n\nCreate a Model Set within a given Container specifying the Folder which will be used to determine the set of Model Document lineages comprising the Model Set.\n\n\n1. get a folder urn from other APIs of Data Managemen firstly, and input it as body param [folderUrn]. Ensure this user has write permissions of the folder\n2. provide the custom name [name] of the new modelset\n3. after posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [GET jobs/:jobId]"
+							},
+							"response": []
+						},
+						{
+							"name": "GET modelsets",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"modelSetId\", body[\"modelSets\"][0].modelSetId)"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-ads-region",
+										"value": "",
+										"description": "The region the container resides in. Possible values: US, EMEA.",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets"
+									],
+									"query": [
+										{
+											"key": "continuationToken",
+											"value": null,
+											"description": "The token indicating the start of the page. If not set, the first page is retrieved.",
+											"disabled": true
+										},
+										{
+											"key": "pageLimit",
+											"value": null,
+											"description": "The maximum number of model sets to return in a page. If not set, the default page limit is used, as determined by the server.",
+											"disabled": true
+										},
+										{
+											"key": "name",
+											"value": null,
+											"description": "A model set name filter. This is an equality filter.",
+											"disabled": true
+										},
+										{
+											"key": "folderUrn",
+											"value": null,
+											"description": "A folder URN filter.",
+											"disabled": true
+										},
+										{
+											"key": "includeDisabled",
+											"value": null,
+											"description": "Determines whether to include disabled model sets.",
+											"disabled": true
+										}
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-model-sets-GET/\n\nGets a list of model sets in a given container which match the provided search parameters. In default, non-active modelset will bt ignored. The param [includeDisabled] can tell whether or not to include disabled model sets.\n\n\nThe first modelset ID will be set to [modelSetId] for other endpoints use. Manually change to the id of other modelset if needed."
+							},
+							"response": []
+						},
+						{
+							"name": "GET jobs/:jobId",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "x-ads-region",
+										"value": "",
+										"description": "The region the container resides in. Possible values: US, EMEA.",
+										"type": "text",
+										"disabled": true
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/jobs/{{jobId}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"jobs",
+										"{{jobId}}"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-container-job-by-container-GET/\n\nRetrieves information about a given container job.\n\nThe current job status. Possible values: Failed, Running, Succeeded, Archived"
+							},
+							"response": []
+						},
+						{
+							"name": "GET modelsets/:modelSetId",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-model-set-GET/\n\nGets a requested model set based on the model set’s ID."
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH modelsets/:modelSetId",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"jobId\", body[\"jobId\"])"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n           \"oldName\": \"Update Formal Coordination\",\n           \"oldDescription\": \"Space for coordinating all disciplines\",\n           \"newName\": \"update back\",\n           \"newDescription\": \"update back\"\n}"
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-patch-model-set-name-description-PATCH/\n\nUpdates a given model set’s name and/or description.\n\nIf oldName and newName are supplied, the name will be updated (both must be supplied, the name cannot be null)\nIf oldDescription or newDescription is supplied, the description will be updated (one can be null or omitted, description can be set to null)"
+							},
+							"response": []
+						},
+						{
+							"name": "DM API: GET folder/contents",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/data/v1/projects/b.{{mc_container_id}}/folders/{{folderUrn}}/contents",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"data",
+										"v1",
+										"projects",
+										"b.{{mc_container_id}}",
+										"folders",
+										"{{folderUrn}}",
+										"contents"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-model-set-GET/\n\nGets a requested model set based on the model set’s ID."
+							},
+							"response": []
+						},
+						{
+							"name": "POST modelsets/:modelSetId/issues",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"jobId\", body[\"jobId\"])",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\n           {\n             \"title\": \"test post modelset issue by Postman\",\n             \"description\": \"test post modelset issue by Postman\",\n             \"assignedTo\": \"200902260532621\",\n             \"assignedToType\": \"User\",\n             \"pushpin\": {\n               \"location\": {\n                 \"x\": 426.770233,\n                 \"y\": 176.688309,\n                 \"z\": 682.2887\n               },\n               \"objectId\": 22,\n               \"type\": \"TwoDVectorPushpin\",\n               \"viewerState\": {}\n             }, \n            \"issueTypeId\":\"e203c789-d165-4fe8-9b72-6306170d9451\",\n            \"issueSubTypeId\":\"4fb607b5-5a5b-46f9-bb89-4bba1725de80\",\n            \"ng_issue_type_id\": \"e203c789-d165-4fe8-9b72-6306170d9451\",\n            \"ng_issue_subtype_id\": \"4fb607b5-5a5b-46f9-bb89-4bba1725de80\",\n            \"rootCauseId\":\"8338ce72-cc83-49d7-90ca-93a3dd3d6ac7\",\n             \"screenShots\": [\n               \"{{screenshotId}}\"\n             ], \n             \"documentVersionUrn\": \"urn:adsk.wipprod:fs.file:vf.wfcW987wTMi2ZuEKr-THuw?version=1\" ,\n\n             \"viewableName\":\"{3D}\"\n           }\n         ]"
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/issues",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"issues"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-add-model-set-issue-POST/\n\nAdds a model set visual inspection issue, represented as a BIM360 issue.\n\n1. Firstly, by [Model Set] >> [GET modelsets/:modelSetId/versions/latest] OR [Model Set] >> [GET modelsets/:modelSetId/versions/:version], get the version URN of the models. Select one as the input of documentVersionUrn\n\n2. Secondly, by [Model Set] >> [POST modelsets/:modelSetId/screenshots], create one screenshot for this issue.\n\n3. By Pushpin tutorial ( https://forge.autodesk.com/en/docs/bim360/v1/tutorials/pushpins/), get valid location and objectId for pushpin.\nAfter posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]"
+							},
+							"response": []
+						},
+						{
+							"name": "GET issue types",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_domain}}/issues/v1/containers/{{mc_container_id}}/ng-issue-types?include=subtypes",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"issues",
+										"v1",
+										"containers",
+										"{{mc_container_id}}",
+										"ng-issue-types"
+									],
+									"query": [
+										{
+											"key": "include",
+											"value": "subtypes"
+										}
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-add-model-set-issue-POST/\n\nAdds a model set visual inspection issue, represented as a BIM360 issue.\n\n1. Firstly, by [Model Set] >> [GET modelsets/:modelSetId/versions/latest] OR [Model Set] >> [GET modelsets/:modelSetId/versions/:version], get the version URN of the models. Select one as the input of documentVersionUrn\n\n2. Secondly, by [Model Set] >> [POST modelsets/:modelSetId/screenshots], create one screenshot for this issue.\n\n3. By Pushpin tutorial ( https://forge.autodesk.com/en/docs/bim360/v1/tutorials/pushpins/), get valid location and objectId for pushpin.\nAfter posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]"
+							},
+							"response": []
+						},
+						{
+							"name": "GET issue root cause",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_domain}}/issues/v1/containers/{{mc_container_id}}/root-causes",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"issues",
+										"v1",
+										"containers",
+										"{{mc_container_id}}",
+										"root-causes"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-add-model-set-issue-POST/\n\nAdds a model set visual inspection issue, represented as a BIM360 issue.\n\n1. Firstly, by [Model Set] >> [GET modelsets/:modelSetId/versions/latest] OR [Model Set] >> [GET modelsets/:modelSetId/versions/:version], get the version URN of the models. Select one as the input of documentVersionUrn\n\n2. Secondly, by [Model Set] >> [POST modelsets/:modelSetId/screenshots], create one screenshot for this issue.\n\n3. By Pushpin tutorial ( https://forge.autodesk.com/en/docs/bim360/v1/tutorials/pushpins/), get valid location and objectId for pushpin.\nAfter posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]"
+							},
+							"response": []
+						},
+						{
+							"name": "POST issues/viewcontext",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"jobId\", body[\"jobId\"])"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\n    \"\"\n]"
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/issues/viewcontext",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"issues",
+										"viewcontext"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-patch-model-set-name-description-PATCH/\n\nUpdates a given model set’s name and/or description.\n\nIf oldName and newName are supplied, the name will be updated (both must be supplied, the name cannot be null)\nIf oldDescription or newDescription is supplied, the description will be updated (one can be null or omitted, description can be set to null)"
+							},
+							"response": []
+						},
+						{
+							"name": "GET modelsets/:modelSetId/jobs/:jobId",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/jobs/{{jobId}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"jobs",
+										"{{jobId}}"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-model-set-job-GET/\n\nRetrieves information about a given model set job."
+							},
+							"response": []
+						},
+						{
+							"name": "POST modelsets/:modelSetId/screenshots",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"screenshotId\", body[\"id\"]);  "
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "file",
+									"file": {
+										"src": "/Users/xiaodongliang/Documents/Screenshots/Screen Shot 2022-06-15 at 4.21.37 PM.png"
+									}
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/screenshots",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"screenshots"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-add-screen-shot-POST/\n\n1. select a local file to upload. \n2. Note: when uploading a screenshot, it creates a \"temporary\" screenshot ID, which expires after 30 days - attaching it to a resource takes the temporary screenshot and makes a \"persistent\" screenshot with a new ID, which is then returned with the resource. So temp screenshot cannot be got by [GET modelsets/:modelSetId/screenshots/:screenShotId].\n3. The temp id will be set to [screenshot_id]."
+							},
+							"response": []
+						},
+						{
+							"name": "GET modelsets/:modelSetId/screenshots/:screenShotId",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/screenshots/{{screenshotId}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"screenshots",
+										"{{screenshotId}}"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-screen-shot-GET/\n\nGets a specific screenshot based on the screenshot’s ID.\n\n\nNOTE!! Newly uploaded screenshots can be retrieved with this endpoint and must first be associated with a resource."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Model Set: Versions",
+					"item": [
+						{
+							"name": "POST modelsets/:modelSetId/versions",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"jobId\", body[\"jobId\"])",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n   \n}"
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_containter_id}}/modelsets/{{modelSetId}}/versions",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_containter_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"versions"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-create-model-set-version-POST/\n\nRequests that the Model Coordination system creates a new version of a given model set.\n\nNote that this operation is not guaranteed to result in a new version of the model set being generated. If the folder contents have not changed, or the change does not necessitate a new model set version (e.g. the changed models are not valid for use in Model Coordination) then no new model set version will be created.\n\nAfter posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]"
+							},
+							"response": []
+						},
+						{
+							"name": "GET modelsets/:modelSetId/versions",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"versionId\", body[\"modelSetVersions\"][0].version)"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/versions",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"versions"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-model-set-versions-GET/\n\nGets a list of versions of a given model set.\n\nThe first modelset version id will be set to [version] for other endpoints use. Manually change to the id of other modelset version if needed."
+							},
+							"response": []
+						},
+						{
+							"name": "GET modelsets/:modelSetId/versions/latest",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"modelset_v_id\", body[\"version\"])"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/versions/latest",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"versions",
+										"latest"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-model-set-version-latest-GET/\n\nGets the latest version of a given model set based on the model set’s ID.\n\nThe  latest modelset version id will be set to [version] for other endpoints use."
+							},
+							"response": []
+						},
+						{
+							"name": "GET modelsets/:modelSetId/versions/:version",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/versions/{{versionId}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"versions",
+										"{{versionId}}"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-model-set-version-GET/\n \n Gets a specific version of a given model set based on the model set’s ID and the version number."
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH modelsets/:modelSetId/versions:enable",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"jobId\", body[\"jobId\"])"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/versions:enable",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"versions:enable"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-enable-model-set-versions-PATCH/\n\nEnables automatic version creation for a given model set.  After posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]\n\nIf enabled, model set version creation will be triggered when the model set’s folders’ content changes, or if a call is explicitly made to the ‘Create Model Set Version’ endpoint.\nIf enabled, model set version creation will be triggered when the model set’s folders’ content changes, or if a call is explicitly made to the ‘Create Model Set Version’ endpoint. If disabled, only an explicit call to the ‘Create Model Set Version’ endpoint will trigger new version creation."
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH modelsets/:modelSetId/versions:disable",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"jobId\", body[\"jobId\"])"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/versions:disable",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"versions:disable"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-disable-model-set-versions-PATCH/\n\nDisables automatic version creation for a given model set. After posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]\n\n\n\nIf enabled, model set version creation will be triggered when the model set’s folders’ content changes, or if a call is explicitly made to the ‘Create Model Set Version’ endpoint. If disabled, only an explicit call to the ‘Create Model Set Version’ endpoint will trigger new version creation.\n\nThe response contains information about the created model set job."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Model Set: Views",
+					"item": [
+						{
+							"name": "POST modelsets/:modelSetId/views",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"viewId\", body[\"viewId\"]);  ",
+											"pm.environment.set(\"jobId\", body[\"jobId\"]);  "
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": " {\n             \"name\": \"create view from postman\",\n            \"description\": \"create view from postman\",\n            \"isPrivate\": true,\n            \"documentLineageUrns\": [\n                \"urn:adsk.wipprod:dm.lineage:hI8RQmMPTDiFO97fXFJHqw\",\n                \"urn:adsk.wipprod:dm.lineage:Mc6OTtIITTGRV03FC558pA\"\n            ],\n            \"screenshotId\":\"{{screenshotId}}\"\n  }"
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/views",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"views"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-create-model-set-view-POST/\n\nAdds a view to a given model set. A view consists of a chosen set of distinct model document lineages which exist within a single model set. The ID of a newly uploaded screenshot can also be supplied, which will associate the screenshot with the newly created view.\n\n1. Firstly, by [Model Set] >> [GET modelsets/:modelSetId/versions/latest]  OR [Model Set] >> [GET modelsets/:modelSetId/versions/:version], get the lineage URN of the models.\n2. Secondly, by [Model Set] >> [POST modelsets/:modelSetId/screenshots], create one screenshot for this view.\n3. After posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]"
+							},
+							"response": []
+						},
+						{
+							"name": "GET modelsets/:modelSetId/views",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"viewId\", body[\"modelSetViews\"][0].viewId)",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/views",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"views"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-model-set-views-GET/\n\nGets a list of model set views in a given model set which match the provided search parameters. The first view  id will be set to [viewId] for other endpoints use. Manually change to the id of other view  if needed."
+							},
+							"response": []
+						},
+						{
+							"name": "POST modelsets/:modelSetId/views:lineages",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\n        \"urn:adsk.wipprod:dm.lineage:KE8lzFhTRU2a60nlc7XF1g\",\n        \"urn:adsk.wipprod:dm.lineage:z3Nqx2V3TqyIv1vuk5-1iA\"\n    ]"
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/views:lineages",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"views:lineages"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-search-model-set-view-lineages-POST/\n\nGets a list of model set views in a given model set which contain the provided set of document lineage URNs. To match the provided list exactly, set the exact property to true."
+							},
+							"response": []
+						},
+						{
+							"name": "GET modelsets/:modelSetId/views/:viewId",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/views/{{viewId}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"views",
+										"{{viewId}}"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-model-set-view-GET/\n\nGets a specific model set view based on the view’s ID."
+							},
+							"response": []
+						},
+						{
+							"name": "PATCH modelsets/:modelSetId/views/:viewId",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"oldName\": \"create view from postman\",\n    \"newName\": \"create view from postman-New\"\n    \n}"
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_containter_id}}/modelsets/{{modelSetId}}/views/{{viewId}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_containter_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"views",
+										"{{viewId}}"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-update-model-set-view-PATCH/\n\nUpdates a specific model set view.After posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]\n\n\nIf oldName and newName are supplied, the name will be updated (both must be supplied, the name cannot be null)\nIf oldDescription or newDescription is supplied, the description will be updated (one can be null or omitted, description can be set to null)\nIf oldIsPrivate and newIsPrivate are supplied, the privacy of the view will be updated (both must be supplied)\nIf oldDefinition and newDefinition are supplied, the view definition will be updated (both must be supplied)"
+							},
+							"response": []
+						},
+						{
+							"name": "DELETE modelsets/:modelSetId/views/:viewId",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"viewId\", body[\"viewId\"]);  ",
+											"pm.environment.set(\"jobId\", body[\"jobId\"]);  "
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_containter_id}}/modelsets/{{modelSetId}}/views/{{viewId}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_containter_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"views",
+										"{{viewId}}"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-delete-model-set-view-DELETE/\n\nDeletes a specific model set view based on the view’s ID. After posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]"
+							},
+							"response": []
+						},
+						{
+							"name": "GET modelsets/:modelSetId/versions/:version/views",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"viewId\", body[\"modelSetViewVersions\"][0].viewId)",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/versions/{{version}}/views",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"versions",
+										"{{version}}",
+										"views"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-model-set-view-versions-GET/\n\nGets a list of all model set views in a given model set as they exist in a specific model set version. The first version view id will be set to [viewId] for other endpoints use. Manually change to the id of other  version view if needed."
+							},
+							"response": []
+						},
+						{
+							"name": "GET modelsets/:modelSetId/versions/:version/views/:viewId",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/versions/{{version}}/views/{{viewId}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"versions",
+										"{{version}}",
+										"views",
+										"{{viewId}}"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-model-set-view-version-GET/\n\nGets a model set view as it exists in a specific model set version.\n\nThis operation determines which specific versions of the document lineages contained in the given view are present in the given model set version."
+							},
+							"response": []
+						},
+						{
+							"name": "GET modelsets/:modelSetId/views/:viewId/jobs/:jobId",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_containter_id}}/modelsets/{{modelSetId}}/views/{{viewId}}/jobs/{{jobId}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{model_set_url}}",
+										"containers",
+										"{{mc_containter_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"views",
+										"{{viewId}}",
+										"jobs",
+										"{{jobId}}"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-model-set-view-job-GET/\n\nRetrieves information about a given model set view job."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Clash Test",
+					"item": [
+						{
+							"name": "GET Modelset Clash Tests",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"testId\", body[\"tests\"][0].id)"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/tests",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{clash_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"tests"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-clash-service-v3-get-model-set-clash-tests-GET/\n\nGets a list of summaries for all clash tests which have been executed for a given model set.  \nThe first test id is set to [test_id] for other endpoints use. Change the id of other test if needed."
+							},
+							"response": []
+						},
+						{
+							"name": "GET modelsets/:modelSetId/versions/:version/tests",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"testId\", body[\"tests\"][0].id)"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/versions/{{version}}/tests",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{clash_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"versions",
+										"{{version}}",
+										"tests"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-clash-service-v3-get-model-set-version-clash-tests-GET/\n\nGets a list of summaries for all clash tests which have been executed for a given model set version. If no tests have yet been completed for the specified model set version then no tests will returned. \nThe first test id is set to [test_id] for other endpoints use. Change the id of other test if needed."
+							},
+							"response": []
+						},
+						{
+							"name": "GET tests/:testId",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_container_id}}/tests/{{testId}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{clash_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"tests",
+										"{{testId}}"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-clash-service-v3-get-clash-test-GET/\n\nGets a requested clash test based on the clash test’s ID."
+							},
+							"response": []
+						},
+						{
+							"name": "GET tests/:testId/resources",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_container_id}}/tests/{{testId}}/resources",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{clash_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"tests",
+										"{{testId}}",
+										"resources"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-clash-service-v3-get-clash-test-resources-GET/\n\nGets information about a given clash test’s result resources.\nclick url to open another tab of endpoint, click [Send] to download the contents of the file. large file, better download as file"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Clash Test: Clash Groups Shared",
+					"item": [
+						{
+							"name": "GET clashes/jobs/:jobId",
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_containter_id}}/clashes/jobs/{{jobId}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{clash_url}}",
+										"containers",
+										"{{mc_containter_id}}",
+										"clashes",
+										"jobs",
+										"{{jobId}}"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-clash-service-v3-get-clash-group-job-GET/\n\nRetrieves information about a given clash job."
+							},
+							"response": []
+						},
+						{
+							"name": "POST modelsets/:modelSetId/screenshots",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"screenshot_id\", body[\"id\"]);  "
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "file",
+									"file": {
+										"src": "/Users/xiaodongliang/Documents/Temp-Screenshots/Screen Shot 2019-12-11 at 6.04.14 PM.png"
+									}
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_containter_id}}/modelsets/{{modelSetId}}/screenshots",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{clash_url}}",
+										"containers",
+										"{{mc_containter_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"screenshots"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-clash-service-v3-add-screen-shot-POST/\n\nUploads a screenshot, associating it with a given model set.  \n\n1. select a local file to upload. \n2. Note: when uploading a screenshot, it creates a \"temporary\" screenshot ID, which expires after 30 days - attaching it to a resource takes the temporary screenshot and makes a \"persistent\" screenshot with a new ID, which is then returned with the resource. So temp screenshot cannot be got by [GET modelsets/:modelSetId/screenshots/:screenShotId].\n3. The temp id will be set to [screenshot_id]."
+							},
+							"response": []
+						},
+						{
+							"name": "GET modelsets/:modelSetId/screenshots/:screenShotId",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_containter_id}}/modelsets/{{modelSetId}}/screenshots/{{screenshot_id}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{clash_url}}",
+										"containers",
+										"{{mc_containter_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"screenshots",
+										"{{screenshot_id}}"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-clash-service-v3-get-screen-shot-GET/\n\nGets a specific screenshot based on the screenshot’s ID.\n\nNewly uploaded screenshots can be retrieved with this endpoint and must first be associated with a closed clash group."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Clash Test: Assigned Clash Groups",
+					"item": [
+						{
+							"name": "POST tests/:testId/clashes:assign",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"jobId\", body[\"jobId\"])"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\n           {\n             \"title\": \"Create Assigned Issue by Postman\",\n             \"description\": \"Create Assigned Issue by Postman\",\n             \"assignedTo\": \"200902260532621\",\n             \"assignedToType\": \"User\",\n             \"pushpin\": {\n               \"location\": {\n                 \"x\": 426.770233,\n                 \"y\": 176.688309,\n                 \"z\": 682.2887\n               },\n               \"objectId\": 22,\n               \"type\": \"TwoDVectorPushpin\",\n               \"viewerState\": {}\n             },\n             \"clashes\": [\n               406\n             ],\n             \"issueTypeId\": \"33c43f8c-47cd-49be-bbee-258416e3edb7\",\n            \"issueSubTypeId\": \"225fed92-54c2-4ad1-808c-f878f4412e39\",\n            \"ng_issue_type_id\": \"33c43f8c-47cd-49be-bbee-258416e3edb7\",\n            \"ng_issue_subtype_id\": \"225fed92-54c2-4ad1-808c-f878f4412e39\",\n            \"rootCauseId\":\"a4ccf064-9ec2-4171-9d55-4dda71dacd67\",\n             \"screenShots\": [\n               \"{{screenshot_id}}\"\n             ],\n             \"documentVersionUrn\": \"urn:adsk.wipprod:fs.file:vf.Mc6OTtIITTGRV03FC558pA?version=1\" \n           }\n         ]"
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_container_id}}/tests/{{testId}}/clashes:assign",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{clash_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"tests",
+										"{{testId}}",
+										"clashes:assign"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-clash-service-v3-add-assigned-clash-group-batch-POST/\n\nAdds a batch of new assigned clash groups to the given clash test.Clash groups which need resolving via a design change are stored as assigned clash groups. In addition a BIM 360 issue is created and associated with the assigned clash group.\n\n1. Firstly, by [Model Set] >> [GET modelsets/:modelSetId/versions/latest] OR [Model Set] >> [GET modelsets/:modelSetId/versions/:version], get the lineage URN of the models. Select one as the input of documentVersionUrn\n2.Secondly, by [Model Set] >> [POST modelsets/:modelSetId/screenshots], create one screenshot for this issue.\n3. By Pushpin tutorial ( https://forge.autodesk.com/en/docs/bim360/v1/tutorials/pushpins/), get valid location and objectId for pushpin.\n4. After posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Clash Test: Clash Groups Shared]>>[GET clashes/jobs/:jobId]"
+							},
+							"response": []
+						},
+						{
+							"name": "GET tests/:testId/clashes/assigned",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_container_id}}/tests/{{testId}}/clashes/assigned",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{clash_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"tests",
+										"{{testId}}",
+										"clashes",
+										"assigned"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-clash-service-v3-get-clash-test-assigned-clash-group-intersection-GET/\n\nGets the state of all assigned clash groups in a particular model set, relative to a specified clash test.\n\nThis endpoint takes the clashes contained within each assigned clash group stored in the system for all clash tests on the same model set, and intersects them with the results of the specified clash test. Clashes which were present when the clash group was first defined may now be resolved."
+							},
+							"response": []
+						},
+						{
+							"name": "POST tests/:testId/clashes/assigned",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\n\t\"804735e0-1d6e-11ea-99ce-e3d4f8e174da\"\n]"
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_container_id}}/tests/{{testId}}/clashes/assigned",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{clash_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"tests",
+										"{{testId}}",
+										"clashes",
+										"assigned"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-clash-service-v3-get-assigned-clash-group-batch-POST/\n\nThis endpoint takes the clashes contained within each specified assigned clash group, and intersects them with the results of the specified clash test. Clashes which were present when the clash group was first defined may now be resolved. \nThis method can accept either a list of assigned clash group IDs or a list of BIM 360 Issue service Issue GUIDs. To retrieve results by BIM 360 Issue GUID, set the issues query parameter to true."
+							},
+							"response": []
+						},
+						{
+							"name": "GET modelsets/:modelSetId/clashes/assigned",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/clashes/assigned",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{clash_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"clashes",
+										"assigned"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-clash-service-v3-search-container-issue-clash-groups-GET/\n\nGets a list of assigned clash groups in a given model set which match the provided search parameters."
+							},
+							"response": []
+						},
+						{
+							"name": "POST /clashes/assigned/viewcontext",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"jobId\", body[\"jobId\"])"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\n    \"87aed299-42ca-44ca-b18e-66def91a6735\"\n]"
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_container_id}}/clashes/assigned/viewcontext",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{clash_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"clashes",
+										"assigned",
+										"viewcontext"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-patch-model-set-name-description-PATCH/\n\nUpdates a given model set’s name and/or description.\n\nIf oldName and newName are supplied, the name will be updated (both must be supplied, the name cannot be null)\nIf oldDescription or newDescription is supplied, the description will be updated (one can be null or omitted, description can be set to null)"
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Clash Test: Closed Clash Groups",
+					"item": [
+						{
+							"name": "POST tests/:testId/clashes:close",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"jobId\", body[\"jobId\"])"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\n           {\n             \"title\": \"Create Closed Issue by Postman\",\n             \"description\": \"Create Closed Issue by Postman\",\n             \"reason\": \"OTHER\",\n             \"screenShots\": [\n               \"{{screenshot_id}}\"\n             ],\n             \"clashes\": [\n               595\n             ]\n           }\n         ]"
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_container_id}}/tests/{{testId}}/clashes:close",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{clash_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"tests",
+										"{{testId}}",
+										"clashes:close"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-clash-service-v3-add-closed-clash-group-batch-POST/\n\nAdds a batch of new closed clash groups to the given clash test.\n\nClash groups which are closed will not be presented should they occur in subsequent clash tests. The clash will still be present in the model however it is not deemed necessary to remove it."
+							},
+							"response": []
+						},
+						{
+							"name": "GET tests/:testId/clashes/closed",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_container_id}}/tests/{{testId}}/clashes/closed",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{clash_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"tests",
+										"{{testId}}",
+										"clashes",
+										"closed"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-clash-service-v3-get-clash-test-closed-clash-group-intersection-GET/\n\nGets the state of all closed clash groups in a particular model set, relative to a specified clash test.\n\nThis endpoint takes the clashes contained within each closed clash group stored in the system for all clash tests on the same model set, and intersects them with the results of the specified clash test. Clashes which were present when the clash group was first defined may now be resolved."
+							},
+							"response": []
+						},
+						{
+							"name": "POST tests/:testId/clashes/closed",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\n           \"11424160-7b4d-41f8-9d14-55ccb0744e8d\"\n]"
+								},
+								"url": {
+									"raw": "{{base_domain}}/bim360/clash/v3/containers/{{mc_container_id}}/tests/{{testId}}/clashes/closed",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"bim360",
+										"clash",
+										"v3",
+										"containers",
+										"{{mc_container_id}}",
+										"tests",
+										"{{testId}}",
+										"clashes",
+										"closed"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-clash-service-v3-get-closed-clash-group-data-batch-POST/\n\nGets the state of the specified closed clash groups, relative to a specified clash test.\n\nThis endpoint takes the clashes contained within each specified closed clash group, and intersects them with the results of the specified clash test. Clashes which were present when the clash group was first defined may now be resolved.\n\nInput clash group id as the param"
+							},
+							"response": []
+						},
+						{
+							"name": "POST modelsets/:modelSetId/clashes:reopen",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"pm.environment.set(\"jobId\", body[\"jobId\"])"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "[\n           \"11424160-7b4d-41f8-9d14-55ccb0744e8d\"\n]"
+								},
+								"url": {
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/clashes:reopen",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{clash_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"clashes:reopen"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-clash-service-v3-reopen-closed-clash-group-batch-POST/\n\nRe-opens a batch of existing closed clash groups.\n\nThis endpoint essentially deletes the specified closed clash groups. This operation cannot be undone, but the closed clash groups can be recreated identically if necessary."
+							},
+							"response": []
+						},
+						{
+							"name": "GET modelsets/:modelSetId/clashes/closed",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/clashes/closed",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"{{clash_url}}",
+										"containers",
+										"{{mc_container_id}}",
+										"modelsets",
+										"{{modelSetId}}",
+										"clashes",
+										"closed"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-clash-service-v3-search-container-model-set-closed-clash-groups-GET/\n\nGets a list of closed clash groups in a given model set which match the provided search parameters."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Model Index Properties - by Model Properties API",
+					"item": [
+						{
+							"name": "POST build index with query",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Specify index (batch-status), Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"find index id: \", function () {",
+											"    var body = JSON.parse(responseBody);",
+											"    var find = body.indexes ",
+											"    ",
+											"    if(pm.expect(find).not.eq(undefined) &&  find.length==2){  ",
+											"        //get index id ",
+											"        var first_model_version_index_id = find[0].indexId;",
+											"        var second_model_version_index_id = find[1].indexId; ",
+											"",
+											"        pm.environment.set(\"one_model_version_index_id\",  first_model_version_index_id);",
+											"         pm.environment.set(\"first_model_version_index_id\",  first_model_version_index_id);",
+											"        pm.environment.set(\"second_model_version_index_id\",  second_model_version_index_id); ",
+											"    }  ",
+											"});  ",
+											" "
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"versions\": [\n        {\n            \"versionUrn\": \"urn:adsk.wipprod:fs.file:vf.wfcW987wTMi2ZuEKr-THuw?version=1\",\n             \"query\": {\n          \"$and\": [\n            {\n              \"$gt\": [{ \"$count\": \"s.views\" }, 0]\n            }\n          ]\n        } \n        },\n        {\n            \"versionUrn\": \"urn:adsk.wipprod:fs.file:vf.9FVvCp9mSQaMP4mY2lFRFQ?version=1\",\n             \"query\": {\n          \"$and\": [\n            {\n              \"$gt\": [{ \"$count\": \"s.views\" }, 0]\n            }\n          ]\n        }\n \n        }        \n    ]\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_domain}}/construction/index/v2/projects/{{mc_container_id}}/indexes:batch-status",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"construction",
+										"index",
+										"v2",
+										"projects",
+										"{{mc_container_id}}",
+										"indexes:batch-status"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Poll for progress of query",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = JSON.parse(responseBody);\r",
+											"pm.collectionVariables.set(\"current_manifest_url\", jsonData.manifestUrl);\r",
+											"pm.collectionVariables.set(\"current_fields_url\", jsonData.fieldsUrl);\r",
+											"pm.collectionVariables.set(\"current_properties_url\", jsonData.propertiesUrl);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/construction/index/v2/projects/{{mc_container_id}}/indexes/{{one_model_version_index_id}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"construction",
+										"index",
+										"v2",
+										"projects",
+										"{{mc_container_id}}",
+										"indexes",
+										"{{one_model_version_index_id}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET index manifest",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Download the manifest, Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{current_manifest_url}}",
+									"host": [
+										"{{current_manifest_url}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET Download index fields",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Download the fields, Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{current_fields_url}}",
+									"host": [
+										"{{current_fields_url}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "GET Download query properties",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Download the raw index, Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{current_properties_url}}",
+									"host": [
+										"{{current_properties_url}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "oauth2",
+		"oauth2": [
+			{
+				"key": "scope",
+				"value": "data:read data:write",
+				"type": "string"
+			},
+			{
+				"key": "client_authentication",
+				"value": "body",
+				"type": "string"
+			},
+			{
+				"key": "clientSecret",
+				"value": "{{client_secret}}",
+				"type": "string"
+			},
+			{
+				"key": "clientId",
+				"value": "{{client_id}}",
+				"type": "string"
+			},
+			{
+				"key": "accessTokenUrl",
+				"value": "https://developer.api.autodesk.com/authentication/v1/gettoken",
+				"type": "string"
+			},
+			{
+				"key": "authUrl",
+				"value": "https://developer.api.autodesk.com/authentication/v1/authorize",
+				"type": "string"
+			},
+			{
+				"key": "redirect_uri",
+				"value": "https://www.getpostman.com/oauth2/callback",
+				"type": "string"
+			},
+			{
+				"key": "tokenName",
+				"value": "access_token",
+				"type": "string"
+			},
+			{
+				"key": "addTokenTo",
+				"value": "header",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "current_manifest_url",
+			"value": ""
+		},
+		{
+			"key": "current_fields_url",
+			"value": ""
+		},
+		{
+			"key": "current_properties_url",
+			"value": ""
+		}
+	]
+}
