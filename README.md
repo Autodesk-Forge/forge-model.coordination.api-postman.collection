@@ -3,7 +3,6 @@
 [![Postman](https://img.shields.io/badge/Postman-v7-orange.svg)](https://www.getpostman.com/)
 
 [![Model Coordination API](https://img.shields.io/badge/Model%20Coordination%20API-v3-green)](https://forge.autodesk.com/en/docs/acc/v1/overview/field-guide/model-properties)
-
 [![Model Properties API](https://img.shields.io/badge/Model%20Properties%20API-v2-yellowgreen)](https://forge.autodesk.com/en/docs/acc/v1/overview/field-guide/model-properties)
 
 ![Beginner](https://img.shields.io/badge/Level-Beginner-green.svg)
@@ -42,13 +41,13 @@ Postman is a popular tool that provides an easy-to-use interface to send HTTP re
 
 5.  Clone this repository or download it. It's recommended to install [GitHub Desktop](https://desktop.github.com/). To clone it via command line, use the following (**Terminal** on MacOSX/Linux, **Git Shell** on Windows):
 
-    ```git clone https://github.com/xiaodongliang/forge-model.coordination.api-postman.collection```
+    ```git clone https://github.com/autodesk-forge/forge-model.coordination.api-postman.collection```
 
 6. Import the collection and environment files to Postman
 
 7. In environment, input _client id_, _client secret_
 
-   <p align="center"><img src="./help/apiref-env.png" width="800" ></p>  
+   <p align="center"><img src="./help/apiref-env.png" width="500" ></p>  
 
 8. In context menu of collection >> **Edit**, switch to the tab **Authorization**. Click **Get New Access Token**, input the variables as below:
 
@@ -62,7 +61,7 @@ Postman is a popular tool that provides an easy-to-use interface to send HTTP re
    - Scope ``data:readx``
    - Client Authentication ``Send Client credentials body``
 
-   <p align="center"><img src="./help/apiref-oauth2.png" width="800" ></p> 
+   <p align="center"><img src="./help/apiref-oauth2.png" width="500" ></p> 
  
  9. Click **Get New Access Token**, it will direct to login Autodesk account, after it succeeds, the token will be generated. Click **Use Token**.  
    
