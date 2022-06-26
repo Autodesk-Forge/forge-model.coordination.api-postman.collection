@@ -2,8 +2,7 @@
 
 [![Postman](https://img.shields.io/badge/Postman-v7-orange.svg)](https://www.getpostman.com/)
 
-[![Model Coordination API](https://img.shields.io/badge/Model%20Coordination%20API-v3-green)](https://forge.autodesk.com/en/docs/acc/v1/overview/field-guide/model-properties)
-[![Model Properties API](https://img.shields.io/badge/Model%20Properties%20API-v2-yellowgreen)](https://forge.autodesk.com/en/docs/acc/v1/overview/field-guide/model-properties)
+[![Model Coordination API](https://img.shields.io/badge/Model%20Coordination%20API-v3-green)](https://forge.autodesk.com/en/docs/acc/v1/overview/field-guide/model-properties) [![Model Properties API](https://img.shields.io/badge/Model%20Properties%20API-v2-yellowgreen)](https://forge.autodesk.com/en/docs/acc/v1/overview/field-guide/model-properties)
 
 ![Beginner](https://img.shields.io/badge/Level-Beginner-green.svg)
 [![License](https://img.shields.io/:license-MIT-blue.svg)](http://opensource.org/licenses/MIT)
@@ -15,7 +14,7 @@ This repository provides a postman collection that follows [tutorials](https://f
 
  The API supports **3 legged token** only.
 
- Update:
+ **Update**:
  The [Index v1 API of Model Coordination API](https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-index-service-v1-query-model-set-version-index-manifest-GET/) is now deprecated. To get index of the models of Model Coordination, use [Model Properties API](https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-index-service-v1-query-model-set-version-index-manifest-GET/). The collection in this repository provides some demo endpoints. To learn more details of **Model Properties API**, check [the other Postman collection](https://github.com/Autodesk-Forge/forge-model.properties-postman.collection). 
 
 
@@ -33,11 +32,11 @@ Postman is a popular tool that provides an easy-to-use interface to send HTTP re
 
     ```https://www.getpostman.com/oauth2/callback```
 
-2. **BIM 360 (or ACC) Account and project**: must be Account Admin to add the app integration. [Learn about provisioning](https://forge.autodesk.com/blog/bim-360-docs-provisioning-forge-apps). Make a note with the __account name__
+2. **BIM 360 (or ACC) Account and project**: must be Account Admin to add the app integration. [Learn about provisioning](https://forge.autodesk.com/blog/bim-360-docs-provisioning-forge-apps).
 
-3. Upload some demo models to one folde of **Project Files** in BIM360, or folder of ***Files** in ACC. Some sample models are available at [Revit models](https://github.com/xiaodongliang/Demo-Test-Sample-Files/tree/master/Model%20Coordination%20API). 
+3. Upload some demo models to one file folder of in BIM360 or ACC. Some sample Revit models are available [in the other repository](https://github.com/xiaodongliang/Demo-Test-Sample-Files/tree/master/Model%20Coordination%20API). 
 
-4. Get BIM 360/ACC Docs project id (without b.) by API , or copy from browser URL bar of Docs UI. And get the folder id.
+4. Get BIM 360/ACC Docs project id (without b.) by other scripts of API, or copy from browser URL bar of Docs UI. And get the folder urn. 
 
 5.  Clone this repository or download it. It's recommended to install [GitHub Desktop](https://desktop.github.com/). To clone it via command line, use the following (**Terminal** on MacOSX/Linux, **Git Shell** on Windows):
 
@@ -45,11 +44,11 @@ Postman is a popular tool that provides an easy-to-use interface to send HTTP re
 
 6. Import the collection and environment files to Postman
 
-7. In environment, input _client id_, _client secret_
+7. In environment, input _client id_, _client secret_, _mc container id_ (project id without b.) and _folder urn_
 
-   <p align="center"><img src="./help/apiref-env.png" width="500" ></p>  
+   <p align="center"><img src="./help/apiref-env.png" width="500" ></p>   
 
-8. In context menu of collection >> **Edit**, switch to the tab **Authorization**. Click **Get New Access Token**, input the variables as below:
+8. In the context menu of collection >> **Edit**, switch to the tab **Authorization**. Click **Get New Access Token**, input the variables as below:
 
    - Grant Type ``Authorization Code``com/
    - Callback URL  ``https://www.getpostman.oauth2/callback``
@@ -71,28 +70,27 @@ Postman is a popular tool that provides an easy-to-use interface to send HTTP re
 
 1. Assume the steps of **Setup** have been performed and the access token is ready.
 
-2. If you want to test the existing project and folder of model coordination space (which contains some demo models already), in environment variable, input the project id (without b) for mc_container_id and folder urn for mc_folder_id.  
-
-
-   Or, you can perform the steps to create new folder, upload models by Optional Prerequsites Steps>>Prepare Folders and Models. Firstly input the account_name and project_name. Run the scripts one by one, including uploading the demo models to the new folder. 
-
-3. When the model coordination space (with models) is ready. Play the tutorials or API references. Try to change some parameters or body for more scenarios to test. 
+2. When the coordinating space (with models) is ready. Play the tutorials or API references. Try to change some parameters or body for more scenarios to test. 
    <p align="center"><img src="./help/collection.png" width="400" ></p>  
 
-4. To test the endpoint of creating [clash issue](https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-add-model-set-issue-POST/), it requires _issue type id_, _issue root cause id_, _one user id_. Please perform the steps by Optional Prerequsites Steps>>Get Definitions Data of Issue. Note: The endpoints to get issue type and root cause of Issue API of BIM360 and ACC are seperate. 
-
-
 ## Tutorials
-1. **Model Sets and Versions**: this demos how to create a new model set (new model coordination space), how to get model sets and query model set versions. It also provides demo when you want to enable an deactivated modelset. When a new model set is created or is enabled, a job will start. Check its status by _GET ModelSet Job Status_. The pre-defined variables are: _mc container id_ (project id without b.) and _mc folder id_ (the folder urn of the model coordination space).
+1. **Model Sets and Versions**: this demos how to create a new model set (new model coordination space), coordinating an existing folder, how to get model sets and query model set versions. It also demo when you want to enable an deactivated modelset. When a new model set is created or is enabled, a job will start. Check its status by _GET ModelSet Job Status_. The pre-defined variables are: _mc container id_ (project id without b.) and _mc folder id_ (the folder urn of the model coordination space).
 
-2. **Model Set Version Clash**: this demos how to get clash data of one clash test.The pre-defined variables are: _mc container id_ (project id without b.) and _modelSetId_ (one model set id from previous scripts).
+2. **Model Set Version Clash**: this demos how to get clash data of one clash test.The pre-defined variables are: _mc container id_ (project id without b.) and _modelSetId_ (one model set id from any previous scripts).
 
-3. **Model Index Properties** - by Model Properties API: this demos how to get document properties(indexing) by Model Properties API with one query condition (views cound>0). The pre-defined variables are: _first model version urn_ and _second model version urn_. Check [the other Postman collection](https://github.com/Autodesk-Forge/forge-model.properties-postman.collection) for more guide about Model Properties API.
+3. **Model Index Properties** - by Model Properties API: this demos how to get document properties(indexing) by Model Properties API with one query condition (views count >0). The pre-defined variables are: _first model version urn_ and _second model version urn_. Check [the other Postman collection](https://github.com/Autodesk-Forge/forge-model.properties-postman.collection) for more guide about Model Properties API.
+
+4. (Additional) If you know account name and project name only, you want to perform the some pre-steps: create new folder, upload two demo models, you can run the scripts: Optional Prerequisites Steps>>Prepare Folders and Models. Firstly input the _account name_ and _project name_. Run the scripts one by one, including uploading the demo models to the new folder. The predefined variables will be as below:
+
+   <p align="center"><img src="./help/apiref-env-additional.png" width="400" ></p>  
 
 ## API References
-  This sections follows the same as [API document](https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-create-model-set-POST/). 
+  This section follows the same as [API document](https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-create-model-set-POST/). 
 
 1. **Model Set**: the endpoints to create model set, get model set, create clash issue, enable/disable model set etc.
+
+   To test the endpoint of creating [clash issue](https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-add-model-set-issue-POST/), it requires _issue type id_, _issue root cause id_, _one user id_. Please perform the steps by Optional Prerequisites Steps>>Get Definitions Data of Issue. Note: The endpoints to get issue type and root cause of Issue API of BIM360 and ACC are seperate . 
+
 2. **Model Set: Versions**: the endpoints to create or get model set version
 3. **Model Set: Views** : the endpoints to get model set views, the documents with the views etc.
 4. **Clash Test**: endpoints to get clash test and clash result.

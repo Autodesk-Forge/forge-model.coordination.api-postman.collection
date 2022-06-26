@@ -6,451 +6,774 @@
 	},
 	"item": [
 		{
+			"name": "Optional Prerequisites Steps",
+			"item": [
+				{
+					"name": "Prepare Folders and Models",
+					"item": [
+						{
+							"name": "01-GET All Hubs - Find One to Test",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"",
+											"var account_name = pm.environment.get(\"account_name\");",
+											"var account = body.data.find(i=>i.attributes.name == account_name)",
+											"pm.environment.set(\"account_id_with_b\", account.id) "
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"//set some pre-defined variables",
+											"pm.environment.set(\"account_name\", \"Developer Advocacy Support\")",
+											"pm.environment.set(\"project_name\", \"Xiaodong-Test-Project\")",
+											"pm.environment.set(\"sub_folder_name\", \"MyTest_Model_Coordination\")",
+											"pm.environment.set(\"first_file_name\", \"mytest_first_model.rvt\")",
+											"pm.environment.set(\"second_file_name\", \"mytest_second_model.rvt\")",
+											"",
+											"//variables for model coordination API"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/project/v1/hubs",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"project",
+										"v1",
+										"hubs"
+									]
+								},
+								"description": "Firstly, input the hub name in environment variable hub_name which you want to check."
+							},
+							"response": []
+						},
+						{
+							"name": "02-GET All Projects - Find One to Test",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"",
+											"var project_name = pm.environment.get(\"project_name\");",
+											"var project = body.data.find(i=>i.attributes.name == project_name)",
+											"pm.environment.set(\"project_id_with_b\", body[\"data\"][index].id)",
+											"//model coordination container id = project  id (without b.) ",
+											"pm.environment.set(\"mc_container_id\", body[\"data\"][index].id.split('b.')[1])  "
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/project/v1/hubs/{{account_id_with_b}}/projects?page[limit]=100",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"project",
+										"v1",
+										"hubs",
+										"{{account_id_with_b}}",
+										"projects"
+									],
+									"query": [
+										{
+											"key": "page[limit]",
+											"value": "100"
+										}
+									]
+								},
+								"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
+							},
+							"response": []
+						},
+						{
+							"name": "03-GET TopFolders - Find Project Files Folder",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"",
+											"var project_files_folder = body.data.find(i=>i.type == \"folders\" && i.attributes.name == \"Project Files\")",
+											"pm.environment.set(\"project_files_folder_id\", project_files_folder.id) "
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/project/v1/hubs/{{account_id_with_b}}/projects/{{project_id_with_b}}/topFolders",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"project",
+										"v1",
+										"hubs",
+										"{{account_id_with_b}}",
+										"projects",
+										"{{project_id_with_b}}",
+										"topFolders"
+									]
+								},
+								"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
+							},
+							"response": []
+						},
+						{
+							"name": "04-Create SubFolder in Project Files Folder",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"",
+											"pm.environment.set(\"mc_folder_id\", body[\"data\"].id)",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/vnd.api+json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n        \"jsonapi\": {\n          \"version\": \"1.0\"\n        },\n        \"data\": {\n          \"type\": \"folders\",\n          \"attributes\": {\n            \"name\": \"{{new_sub_folder_name}}\",\n            \"extension\": {\n              \"type\": \"folders:autodesk.bim360:Folder\",\n              \"version\": \"1.0\"\n            }\n          },\n          \"relationships\": {\n            \"parent\": {\n              \"data\": {\n                \"type\": \"folders\",\n                \"id\": \"{{project_files_folder_id}}\"\n              }\n            }\n          }\n        }\n      }"
+								},
+								"url": {
+									"raw": "{{base_domain}}/data/v1/projects/{{project_id_with_b}}/folders",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"data",
+										"v1",
+										"projects",
+										"{{project_id_with_b}}",
+										"folders"
+									]
+								},
+								"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
+							},
+							"response": []
+						},
+						{
+							"name": "05-Create Storage in SubFolder for First File",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"var first_file_urn = body[\"data\"].id",
+											"pm.environment.set(\"first_file_urn\", first_file_urn)",
+											"var first_file_guid = first_file_urn.split(\"/\")[1]",
+											"pm.environment.set(\"first_file_guid\", first_file_guid)",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/vnd.api+json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n        \"jsonapi\": {\n          \"version\": \"1.0\"\n        },\n        \"data\": {\n          \"type\": \"objects\",\n          \"attributes\": {\n            \"name\": \"{{first_file_name}}\"\n          },\n          \"relationships\": {\n            \"target\": {\n              \"data\": {\n                \"type\": \"folders\",\n                \"id\": \"{{mc_folder_id}}\"\n              }\n            }\n          }\n        }\n      }"
+								},
+								"url": {
+									"raw": "{{base_domain}}/data/v1/projects/{{project_id_with_b}}/storage",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"data",
+										"v1",
+										"projects",
+										"{{project_id_with_b}}",
+										"storage"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "06-Upload First File to SubFolder",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "file",
+									"file": {}
+								},
+								"url": {
+									"raw": "{{base_domain}}/oss/v2/buckets/wip.dm.prod/objects/{{first_file_guid}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"oss",
+										"v2",
+										"buckets",
+										"wip.dm.prod",
+										"objects",
+										"{{first_file_guid}}"
+									]
+								},
+								"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
+							},
+							"response": []
+						},
+						{
+							"name": "06-Create Item for First File",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"data\": {\n    \"type\": \"items\",\n    \"attributes\": {\n      \"displayName\": \"{{first_file_name}}\",\n      \"extension\": {\n        \"type\": \"items:autodesk.bim360:File\",\n        \"version\": \"1.0\"\n      }\n    },\n    \"relationships\": {\n      \"tip\": {\n        \"data\": {\n          \"type\": \"versions\",\n          \"id\": \"1\"\n        }\n      },\n      \"parent\": {\n        \"data\": {\n          \"type\": \"folders\",\n          \"id\": \"{{mc_folder_id}}\"\n        }\n      }\n    }\n  },\n  \"included\": [\n    {\n      \"type\": \"versions\",\n      \"id\": \"1\",\n      \"attributes\": {\n        \"name\": \"{{first_file_name}}\",\n        \"extension\": {\n          \"type\": \"versions:autodesk.bim360:File\",\n          \"version\": \"1.0\"\n        }\n      },\n      \"relationships\": {\n        \"storage\": {\n          \"data\": {\n            \"type\": \"objects\",\n            \"id\": \"{{first_file_urn}}\"\n          }\n        }\n      }\n    }\n  ]\n}"
+								},
+								"url": {
+									"raw": "{{base_domain}}/data/v1/projects/{{project_id_with_b}}/items",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"data",
+										"v1",
+										"projects",
+										"{{project_id_with_b}}",
+										"items"
+									]
+								},
+								"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
+							},
+							"response": []
+						},
+						{
+							"name": "07-Create Storage in SubFolder for Second File",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"var second_file_urn = body[\"data\"].id",
+											"pm.environment.set(\"second_file_urn\", second_file_urn)",
+											"var second_file_guid = second_file_urn.split(\"/\")[1]",
+											"pm.environment.set(\"second_file_guid\", second_file_guid)",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/vnd.api+json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n        \"jsonapi\": {\n          \"version\": \"1.0\"\n        },\n        \"data\": {\n          \"type\": \"objects\",\n          \"attributes\": {\n            \"name\": \"{{second_file_name}}\"\n          },\n          \"relationships\": {\n            \"target\": {\n              \"data\": {\n                \"type\": \"folders\",\n                \"id\": \"{{mc_folder_id}}\"\n              }\n            }\n          }\n        }\n      }"
+								},
+								"url": {
+									"raw": "{{base_domain}}/data/v1/projects/{{project_id_with_b}}/storage",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"data",
+										"v1",
+										"projects",
+										"{{project_id_with_b}}",
+										"storage"
+									]
+								},
+								"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
+							},
+							"response": []
+						},
+						{
+							"name": "08-Upload Second File to SubFolder",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"body": {
+									"mode": "file",
+									"file": {}
+								},
+								"url": {
+									"raw": "{{base_domain}}/oss/v2/buckets/wip.dm.prod/objects/{{second_file_guid}}",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"oss",
+										"v2",
+										"buckets",
+										"wip.dm.prod",
+										"objects",
+										"{{second_file_guid}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "06-Create Item for Second File",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"data\": {\n    \"type\": \"items\",\n    \"attributes\": {\n      \"displayName\": \"{{second_file_name}}\",\n      \"extension\": {\n        \"type\": \"items:autodesk.bim360:File\",\n        \"version\": \"1.0\"\n      }\n    },\n    \"relationships\": {\n      \"tip\": {\n        \"data\": {\n          \"type\": \"versions\",\n          \"id\": \"1\"\n        }\n      },\n      \"parent\": {\n        \"data\": {\n          \"type\": \"folders\",\n          \"id\": \"{{mc_folder_id}}\"\n        }\n      }\n    }\n  },\n  \"included\": [\n    {\n      \"type\": \"versions\",\n      \"id\": \"1\",\n      \"attributes\": {\n        \"name\": \"{{second_file_name}}\",\n        \"extension\": {\n          \"type\": \"versions:autodesk.bim360:File\",\n          \"version\": \"1.0\"\n        }\n      },\n      \"relationships\": {\n        \"storage\": {\n          \"data\": {\n            \"type\": \"objects\",\n            \"id\": \"{{second_file_urn}}\"\n          }\n        }\n      }\n    }\n  ]\n}"
+								},
+								"url": {
+									"raw": "{{base_domain}}/data/v1/projects/{{project_id_with_b}}/items",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"data",
+										"v1",
+										"projects",
+										"{{project_id_with_b}}",
+										"items"
+									]
+								},
+								"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Get Definitions Data of Issue",
+					"item": [
+						{
+							"name": "01-GET one account (hub)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"",
+											"var account_name = pm.environment.get(\"account_name\");",
+											"var account = body.data.find(i=>i.attributes.name == account_name)",
+											"pm.environment.set(\"account_id_with_b\", account.id) "
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/project/v1/hubs",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"project",
+										"v1",
+										"hubs"
+									]
+								},
+								"description": "Firstly, input the hub name in environment variable hub_name which you want to check."
+							},
+							"response": []
+						},
+						{
+							"name": "02-GET one project id and issue container id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"",
+											"var project_name = pm.environment.get(\"project_name\");",
+											"var project = body.data.find(i=>i.attributes.name == project_name) ",
+											"  pm.environment.set(\"project_id_with_b\", project.id)",
+											"        //model coordination container id = project  id (without b.) ",
+											"        pm.environment.set(\"mc_container_id\", project.id.split('b.')[1]) ",
+											"        pm.environment.set(\"issue_container_id\", project[\"relationships\"][\"issues\"][\"data\"].id) "
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_domain}}/project/v1/hubs/{{account_id_with_b}}/projects?page[limit]=100",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"project",
+										"v1",
+										"hubs",
+										"{{account_id_with_b}}",
+										"projects"
+									],
+									"query": [
+										{
+											"key": "page[limit]",
+											"value": "100"
+										}
+									]
+								},
+								"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
+							},
+							"response": []
+						},
+						{
+							"name": "GET issue types - BIM360 API",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"",
+											"var one_issue_type = body.results[0] ",
+											"pm.environment.set(\"issue_type_id\", one_issue_type.id) ",
+											"pm.environment.set(\"issue_subtype_id\", one_issue_type.subtypes[0].id) "
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_domain}}/issues/v1/containers/{{issue_container_id}}/ng-issue-types?include=subtypes",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"issues",
+										"v1",
+										"containers",
+										"{{issue_container_id}}",
+										"ng-issue-types"
+									],
+									"query": [
+										{
+											"key": "include",
+											"value": "subtypes"
+										}
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-add-model-set-issue-POST/\n\nAdds a model set visual inspection issue, represented as a BIM360 issue.\n\n1. Firstly, by [Model Set] >> [GET modelsets/:modelSetId/versions/latest] OR [Model Set] >> [GET modelsets/:modelSetId/versions/:version], get the version URN of the models. Select one as the input of documentVersionUrn\n\n2. Secondly, by [Model Set] >> [POST modelsets/:modelSetId/screenshots], create one screenshot for this issue.\n\n3. By Pushpin tutorial ( https://forge.autodesk.com/en/docs/bim360/v1/tutorials/pushpins/), get valid location and objectId for pushpin.\nAfter posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]"
+							},
+							"response": []
+						},
+						{
+							"name": "GET issue types - ACC API",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_domain}}/construction/issues/v1/projects/{{mc_container_id}}/issue-types?include=subtypes",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"construction",
+										"issues",
+										"v1",
+										"projects",
+										"{{mc_container_id}}",
+										"issue-types"
+									],
+									"query": [
+										{
+											"key": "include",
+											"value": "subtypes"
+										}
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-add-model-set-issue-POST/\n\nAdds a model set visual inspection issue, represented as a BIM360 issue.\n\n1. Firstly, by [Model Set] >> [GET modelsets/:modelSetId/versions/latest] OR [Model Set] >> [GET modelsets/:modelSetId/versions/:version], get the version URN of the models. Select one as the input of documentVersionUrn\n\n2. Secondly, by [Model Set] >> [POST modelsets/:modelSetId/screenshots], create one screenshot for this issue.\n\n3. By Pushpin tutorial ( https://forge.autodesk.com/en/docs/bim360/v1/tutorials/pushpins/), get valid location and objectId for pushpin.\nAfter posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]"
+							},
+							"response": []
+						},
+						{
+							"name": "GET issue root cause - BIM360 API",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"",
+											"var one_root_cause_type = body.data[0] ",
+											"pm.environment.set(\"issue_root_cause_id\", one_root_cause_type.id) ",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_domain}}/issues/v1/containers/{{mc_container_id}}/root-causes",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"issues",
+										"v1",
+										"containers",
+										"{{mc_container_id}}",
+										"root-causes"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-add-model-set-issue-POST/\n\nAdds a model set visual inspection issue, represented as a BIM360 issue.\n\n1. Firstly, by [Model Set] >> [GET modelsets/:modelSetId/versions/latest] OR [Model Set] >> [GET modelsets/:modelSetId/versions/:version], get the version URN of the models. Select one as the input of documentVersionUrn\n\n2. Secondly, by [Model Set] >> [POST modelsets/:modelSetId/screenshots], create one screenshot for this issue.\n\n3. By Pushpin tutorial ( https://forge.autodesk.com/en/docs/bim360/v1/tutorials/pushpins/), get valid location and objectId for pushpin.\nAfter posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]"
+							},
+							"response": []
+						},
+						{
+							"name": "GET issue root cause - ACC API",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"",
+											"var one_root_cause_type = body.results[0] ",
+											"pm.environment.set(\"issue_root_cause_id\", one_root_cause_type.id) ",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_domain}}/construction/issues/v1/projects/{{mc_container_id}}/issue-root-cause-categories?include=rootcauses",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"construction",
+										"issues",
+										"v1",
+										"projects",
+										"{{mc_container_id}}",
+										"issue-root-cause-categories"
+									],
+									"query": [
+										{
+											"key": "include",
+											"value": "rootcauses"
+										}
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-add-model-set-issue-POST/\n\nAdds a model set visual inspection issue, represented as a BIM360 issue.\n\n1. Firstly, by [Model Set] >> [GET modelsets/:modelSetId/versions/latest] OR [Model Set] >> [GET modelsets/:modelSetId/versions/:version], get the version URN of the models. Select one as the input of documentVersionUrn\n\n2. Secondly, by [Model Set] >> [POST modelsets/:modelSetId/screenshots], create one screenshot for this issue.\n\n3. By Pushpin tutorial ( https://forge.autodesk.com/en/docs/bim360/v1/tutorials/pushpins/), get valid location and objectId for pushpin.\nAfter posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]"
+							},
+							"response": []
+						},
+						{
+							"name": "GET Id of Logged User",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var body = JSON.parse(responseBody);",
+											"",
+											"pm.environment.set(\"one_user_id\", body.userId) ",
+											""
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Content-Type",
+										"type": "text",
+										"value": "application/json"
+									}
+								],
+								"url": {
+									"raw": "{{base_domain}}/userprofile/v1/users/@me",
+									"host": [
+										"{{base_domain}}"
+									],
+									"path": [
+										"userprofile",
+										"v1",
+										"users",
+										"@me"
+									]
+								},
+								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-add-model-set-issue-POST/\n\nAdds a model set visual inspection issue, represented as a BIM360 issue.\n\n1. Firstly, by [Model Set] >> [GET modelsets/:modelSetId/versions/latest] OR [Model Set] >> [GET modelsets/:modelSetId/versions/:version], get the version URN of the models. Select one as the input of documentVersionUrn\n\n2. Secondly, by [Model Set] >> [POST modelsets/:modelSetId/screenshots], create one screenshot for this issue.\n\n3. By Pushpin tutorial ( https://forge.autodesk.com/en/docs/bim360/v1/tutorials/pushpins/), get valid location and objectId for pushpin.\nAfter posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]"
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
 			"name": "Tutorials",
 			"item": [
 				{
 					"name": "Model Sets and Versions",
 					"item": [
 						{
-							"name": "Optional: Prepare Folders and Models",
-							"item": [
-								{
-									"name": "01-GET All Hubs - Find One to Test",
-									"event": [
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													"var body = JSON.parse(responseBody);",
-													"",
-													"var hub_name = pm.environment.get(\"hub_name\");",
-													"for(var index in body[\"data\"]){",
-													"    if(body[\"data\"][index].attributes.name == hub_name){",
-													"        pm.environment.set(\"hub_id\", body[\"data\"][index].id)",
-													"    }",
-													"}",
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "{{base_domain}}/project/v1/hubs",
-											"host": [
-												"{{base_domain}}"
-											],
-											"path": [
-												"project",
-												"v1",
-												"hubs"
-											]
-										},
-										"description": "Firstly, input the hub name in environment variable hub_name which you want to check."
-									},
-									"response": []
-								},
-								{
-									"name": "02-GET All Projects - Find One to Test",
-									"event": [
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													"var body = JSON.parse(responseBody);",
-													"",
-													"var project_name = pm.environment.get(\"project_name\");",
-													"for(var index in body[\"data\"]){",
-													"    if(body[\"data\"][index].attributes.name == project_name){",
-													"        pm.environment.set(\"project_id\", body[\"data\"][index].id)",
-													"        //model coordination container id = project  id (without b.) ",
-													"        pm.environment.set(\"mc_containter_id\", body[\"data\"][index].id.split('b.')[1]) ",
-													"",
-													"    }",
-													"}",
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "{{base_domain}}/project/v1/hubs/{{hub_id}}/projects?page[limit]=100",
-											"host": [
-												"{{base_domain}}"
-											],
-											"path": [
-												"project",
-												"v1",
-												"hubs",
-												"{{hub_id}}",
-												"projects"
-											],
-											"query": [
-												{
-													"key": "page[limit]",
-													"value": "100"
-												}
-											]
-										},
-										"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
-									},
-									"response": []
-								},
-								{
-									"name": "03-GET TopFolders - Find Plan Folder",
-									"event": [
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													"var body = JSON.parse(responseBody);",
-													"",
-													"for(var index in body[\"data\"]){",
-													"    if(body[\"data\"][index].type == \"folders\" && body[\"data\"][index].attributes.name == \"Plans\"){",
-													"        pm.environment.set(\"plan_folder_id\", body[\"data\"][index].id)",
-													"    }",
-													"}",
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"method": "GET",
-										"header": [],
-										"url": {
-											"raw": "{{base_domain}}/project/v1/hubs/{{hub_id}}/projects/{{project_id}}/topFolders",
-											"host": [
-												"{{base_domain}}"
-											],
-											"path": [
-												"project",
-												"v1",
-												"hubs",
-												"{{hub_id}}",
-												"projects",
-												"{{project_id}}",
-												"topFolders"
-											]
-										},
-										"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
-									},
-									"response": []
-								},
-								{
-									"name": "04-Create SubFolder in Plan Folder",
-									"event": [
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													"var body = JSON.parse(responseBody);",
-													"",
-													"pm.environment.set(\"sub_folder_id\", body[\"data\"].id)",
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"method": "POST",
-										"header": [
-											{
-												"key": "Content-Type",
-												"value": "application/vnd.api+json",
-												"type": "text"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n        \"jsonapi\": {\n          \"version\": \"1.0\"\n        },\n        \"data\": {\n          \"type\": \"folders\",\n          \"attributes\": {\n            \"name\": \"{{subfolder_name}}\",\n            \"extension\": {\n              \"type\": \"folders:autodesk.bim360:Folder\",\n              \"version\": \"1.0\"\n            }\n          },\n          \"relationships\": {\n            \"parent\": {\n              \"data\": {\n                \"type\": \"folders\",\n                \"id\": \"{{plan_folder_id}}\"\n              }\n            }\n          }\n        }\n      }"
-										},
-										"url": {
-											"raw": "{{base_domain}}/data/v1/projects/{{project_id}}/folders",
-											"host": [
-												"{{base_domain}}"
-											],
-											"path": [
-												"data",
-												"v1",
-												"projects",
-												"{{project_id}}",
-												"folders"
-											]
-										},
-										"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
-									},
-									"response": []
-								},
-								{
-									"name": "05-Create Storage in SubFolder for First File",
-									"event": [
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													"var body = JSON.parse(responseBody);",
-													"var first_file_urn = body[\"data\"].id",
-													"pm.environment.set(\"first_file_urn\", first_file_urn)",
-													"var first_file_guid = first_file_urn.split(\"/\")[1]",
-													"pm.environment.set(\"first_file_guid\", first_file_guid)",
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"method": "POST",
-										"header": [
-											{
-												"key": "Content-Type",
-												"type": "text",
-												"value": "application/vnd.api+json"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n        \"jsonapi\": {\n          \"version\": \"1.0\"\n        },\n        \"data\": {\n          \"type\": \"objects\",\n          \"attributes\": {\n            \"name\": \"{{first_file_name}}\"\n          },\n          \"relationships\": {\n            \"target\": {\n              \"data\": {\n                \"type\": \"folders\",\n                \"id\": \"{{sub_folder_id}}\"\n              }\n            }\n          }\n        }\n      }"
-										},
-										"url": {
-											"raw": "{{base_domain}}/data/v1/projects/{{project_id}}/storage",
-											"host": [
-												"{{base_domain}}"
-											],
-											"path": [
-												"data",
-												"v1",
-												"projects",
-												"{{project_id}}",
-												"storage"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "06-Upload First File to SubFolder",
-									"event": [
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"method": "PUT",
-										"header": [],
-										"body": {
-											"mode": "file",
-											"file": {}
-										},
-										"url": {
-											"raw": "{{base_domain}}/oss/v2/buckets/wip.dm.prod/objects/{{first_file_guid}}",
-											"host": [
-												"{{base_domain}}"
-											],
-											"path": [
-												"oss",
-												"v2",
-												"buckets",
-												"wip.dm.prod",
-												"objects",
-												"{{first_file_guid}}"
-											]
-										},
-										"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
-									},
-									"response": []
-								},
-								{
-									"name": "06-Create Item for First File",
-									"event": [
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"method": "POST",
-										"header": [
-											{
-												"key": "Content-Type",
-												"value": "application/json",
-												"type": "text"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"data\": {\n    \"type\": \"items\",\n    \"attributes\": {\n      \"displayName\": \"{{first_file_name}}\",\n      \"extension\": {\n        \"type\": \"items:autodesk.bim360:File\",\n        \"version\": \"1.0\"\n      }\n    },\n    \"relationships\": {\n      \"tip\": {\n        \"data\": {\n          \"type\": \"versions\",\n          \"id\": \"1\"\n        }\n      },\n      \"parent\": {\n        \"data\": {\n          \"type\": \"folders\",\n          \"id\": \"{{sub_folder_id}}\"\n        }\n      }\n    }\n  },\n  \"included\": [\n    {\n      \"type\": \"versions\",\n      \"id\": \"1\",\n      \"attributes\": {\n        \"name\": \"{{first_file_name}}\",\n        \"extension\": {\n          \"type\": \"versions:autodesk.bim360:File\",\n          \"version\": \"1.0\"\n        }\n      },\n      \"relationships\": {\n        \"storage\": {\n          \"data\": {\n            \"type\": \"objects\",\n            \"id\": \"{{first_file_urn}}\"\n          }\n        }\n      }\n    }\n  ]\n}"
-										},
-										"url": {
-											"raw": "{{base_domain}}/data/v1/projects/{{project_id}}/items",
-											"host": [
-												"{{base_domain}}"
-											],
-											"path": [
-												"data",
-												"v1",
-												"projects",
-												"{{project_id}}",
-												"items"
-											]
-										},
-										"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
-									},
-									"response": []
-								},
-								{
-									"name": "07-Create Storage in SubFolder for Second File",
-									"event": [
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													"var body = JSON.parse(responseBody);",
-													"var second_file_urn = body[\"data\"].id",
-													"pm.environment.set(\"second_file_urn\", second_file_urn)",
-													"var second_file_guid = second_file_urn.split(\"/\")[1]",
-													"pm.environment.set(\"second_file_guid\", second_file_guid)",
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"method": "POST",
-										"header": [
-											{
-												"key": "Content-Type",
-												"type": "text",
-												"value": "application/vnd.api+json"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n        \"jsonapi\": {\n          \"version\": \"1.0\"\n        },\n        \"data\": {\n          \"type\": \"objects\",\n          \"attributes\": {\n            \"name\": \"{{second_file_name}}\"\n          },\n          \"relationships\": {\n            \"target\": {\n              \"data\": {\n                \"type\": \"folders\",\n                \"id\": \"{{sub_folder_id}}\"\n              }\n            }\n          }\n        }\n      }"
-										},
-										"url": {
-											"raw": "{{base_domain}}/data/v1/projects/{{project_id}}/storage",
-											"host": [
-												"{{base_domain}}"
-											],
-											"path": [
-												"data",
-												"v1",
-												"projects",
-												"{{project_id}}",
-												"storage"
-											]
-										},
-										"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
-									},
-									"response": []
-								},
-								{
-									"name": "08-Upload Second File to SubFolder",
-									"event": [
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"method": "PUT",
-										"header": [],
-										"body": {
-											"mode": "file",
-											"file": {}
-										},
-										"url": {
-											"raw": "{{base_domain}}/oss/v2/buckets/wip.dm.prod/objects/{{second_file_guid}}",
-											"host": [
-												"{{base_domain}}"
-											],
-											"path": [
-												"oss",
-												"v2",
-												"buckets",
-												"wip.dm.prod",
-												"objects",
-												"{{second_file_guid}}"
-											]
-										}
-									},
-									"response": []
-								},
-								{
-									"name": "06-Create Item for Second File",
-									"event": [
-										{
-											"listen": "test",
-											"script": {
-												"exec": [
-													""
-												],
-												"type": "text/javascript"
-											}
-										}
-									],
-									"request": {
-										"method": "POST",
-										"header": [
-											{
-												"key": "Content-Type",
-												"value": "application/json",
-												"type": "text"
-											}
-										],
-										"body": {
-											"mode": "raw",
-											"raw": "{\n  \"jsonapi\": {\n    \"version\": \"1.0\"\n  },\n  \"data\": {\n    \"type\": \"items\",\n    \"attributes\": {\n      \"displayName\": \"{{second_file_name}}\",\n      \"extension\": {\n        \"type\": \"items:autodesk.bim360:File\",\n        \"version\": \"1.0\"\n      }\n    },\n    \"relationships\": {\n      \"tip\": {\n        \"data\": {\n          \"type\": \"versions\",\n          \"id\": \"1\"\n        }\n      },\n      \"parent\": {\n        \"data\": {\n          \"type\": \"folders\",\n          \"id\": \"{{sub_folder_id}}\"\n        }\n      }\n    }\n  },\n  \"included\": [\n    {\n      \"type\": \"versions\",\n      \"id\": \"1\",\n      \"attributes\": {\n        \"name\": \"{{second_file_name}}\",\n        \"extension\": {\n          \"type\": \"versions:autodesk.bim360:File\",\n          \"version\": \"1.0\"\n        }\n      },\n      \"relationships\": {\n        \"storage\": {\n          \"data\": {\n            \"type\": \"objects\",\n            \"id\": \"{{second_file_urn}}\"\n          }\n        }\n      }\n    }\n  ]\n}"
-										},
-										"url": {
-											"raw": "{{base_domain}}/data/v1/projects/{{project_id}}/items",
-											"host": [
-												"{{base_domain}}"
-											],
-											"path": [
-												"data",
-												"v1",
-												"projects",
-												"{{project_id}}",
-												"items"
-											]
-										},
-										"description": "The first modelset ID will be set to [modelset_id] for other endpoints use. Manually change to the id of other modelset if needed."
-									},
-									"response": []
-								}
-							]
-						},
-						{
-							"name": "Step1:Creating model sets",
+							"name": "Creating model sets",
 							"event": [
 								{
 									"listen": "test",
@@ -458,7 +781,17 @@
 										"exec": [
 											"var body = JSON.parse(responseBody);",
 											"pm.environment.set(\"jobId\", body[\"jobId\"])",
-											"pm.environment.set(\"modelset_id\", body[\"modelSetId\"])"
+											"pm.environment.set(\"modelSetId\", body[\"modelSetId\"])"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"//set some pre-defined variables",
+											"pm.environment.set(\"modelset_name\", \"MyTest_Model_Coordination\")"
 										],
 										"type": "text/javascript"
 									}
@@ -474,7 +807,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n   \"name\": \"{{modelset_name}}\",\n  \"description\": \"this is a modelset created by postman\",\n  \"isDisabled\": true,\n  \"folders\": [\n    {\n      \"folderUrn\": \"{{sub_folder_id}}\"\n    }\n  ]\n}"
+									"raw": "{\n   \"name\": \"My Test Creating New ModelSet by API\",\n  \"description\": \"this is a modelset created by postman\",\n  \"isDisabled\": true,\n  \"folders\": [\n    {\n      \"folderUrn\": \"{{mc_folder_id}}\"\n    }\n  ]\n}"
 								},
 								"url": {
 									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets",
@@ -493,7 +826,7 @@
 							"response": []
 						},
 						{
-							"name": "Step2: GET jobs/:jobId",
+							"name": "GET ModelSet Job Status",
 							"protocolProfileBehavior": {
 								"disableBodyPruning": true
 							},
@@ -524,7 +857,7 @@
 							"response": []
 						},
 						{
-							"name": "Step2: Querying model sets - get first model set",
+							"name": "Querying model sets - get first model set",
 							"event": [
 								{
 									"listen": "test",
@@ -541,7 +874,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}} /modelsets",
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}} /modelsets?includeDisabled=false",
 									"host": [
 										"{{base_domain}}"
 									],
@@ -550,6 +883,12 @@
 										"containers",
 										"{{mc_container_id}} ",
 										"modelsets"
+									],
+									"query": [
+										{
+											"key": "includeDisabled",
+											"value": "false"
+										}
 									]
 								},
 								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-model-sets-GET/\n\nGets a list of model sets in a given container which match the provided search parameters. In default, non-active modelset will bt ignored. The param [includeDisabled] can tell whether or not to include disabled model sets.\n\n\nThe first modelset ID will be set to [modelSetId] for other endpoints use. Manually change to the id of other modelset if needed."
@@ -609,7 +948,7 @@
 								"method": "PATCH",
 								"header": [],
 								"url": {
-									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/versions:disable",
+									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/versions:enable",
 									"host": [
 										"{{base_domain}}"
 									],
@@ -619,7 +958,7 @@
 										"{{mc_container_id}}",
 										"modelsets",
 										"{{modelSetId}}",
-										"versions:disable"
+										"versions:enable"
 									]
 								},
 								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-disable-model-set-versions-PATCH/\n\nDisables automatic version creation for a given model set. After posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]\n\n\n\nIf enabled, model set version creation will be triggered when the model set’s folders’ content changes, or if a call is explicitly made to the ‘Create Model Set Version’ endpoint. If disabled, only an explicit call to the ‘Create Model Set Version’ endpoint will trigger new version creation.\n\nThe response contains information about the created model set job."
@@ -672,7 +1011,7 @@
 							"response": []
 						},
 						{
-							"name": "GET modelsets/:modelSetId/jobs/:jobId",
+							"name": "GET ModelSet Job Status",
 							"event": [
 								{
 									"listen": "test",
@@ -733,14 +1072,18 @@
 					"name": "Model Set Version Clash",
 					"item": [
 						{
-							"name": "Step 1: Get the latest Model Set Version",
+							"name": "Get the latest Model Set Version",
 							"event": [
 								{
 									"listen": "test",
 									"script": {
 										"exec": [
 											"var body = JSON.parse(responseBody);",
-											"pm.environment.set(\"modelset_v_id\", body[\"version\"])"
+											"pm.environment.set(\"versionId\", body[\"version\"])",
+											"",
+											"pm.environment.set(\"versionId\", body[\"version\"])",
+											"pm.environment.set(\"first_model_version_urn\", body[\"documentVersions\"][0][\"versionUrn\"])",
+											"pm.environment.set(\"second_model_version_urn\", body[\"documentVersions\"][1][\"versionUrn\"])"
 										],
 										"type": "text/javascript"
 									}
@@ -774,14 +1117,14 @@
 							"response": []
 						},
 						{
-							"name": "Step 2: Get the Clash Tests for the Model Set Version",
+							"name": "Get the Clash Tests for the Model Set Version",
 							"event": [
 								{
 									"listen": "test",
 									"script": {
 										"exec": [
 											"var body = JSON.parse(responseBody);",
-											"pm.environment.set(\"test_id\", body[\"tests\"][0].id)"
+											"pm.environment.set(\"testId\", body[\"tests\"][0].id)"
 										],
 										"type": "text/javascript"
 									}
@@ -816,7 +1159,7 @@
 							"response": []
 						},
 						{
-							"name": "Step 3: Get the Clash Test Result Resource URLs",
+							"name": "Get the Clash Test Result Resource URLs",
 							"event": [
 								{
 									"listen": "test",
@@ -832,7 +1175,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_container_id}}/tests/{{test_id}}/resources",
+									"raw": "{{base_domain}}/{{clash_url}}/containers/{{mc_container_id}}/tests/{{testId}}/resources",
 									"host": [
 										"{{base_domain}}"
 									],
@@ -841,7 +1184,7 @@
 										"containers",
 										"{{mc_container_id}}",
 										"tests",
-										"{{test_id}}",
+										"{{testId}}",
 										"resources"
 									]
 								},
@@ -873,7 +1216,7 @@
 					]
 				},
 				{
-					"name": "Model Index Properties Indexing - by Model Properties API Copy",
+					"name": "Model Index Properties - by Model Properties API",
 					"item": [
 						{
 							"name": "POST build index with query",
@@ -917,7 +1260,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"versions\": [\n        {\n            \"versionUrn\": \"urn:adsk.wipprod:fs.file:vf.wfcW987wTMi2ZuEKr-THuw?version=1\",\n             \"query\": {\n          \"$and\": [\n            {\n              \"$gt\": [{ \"$count\": \"s.views\" }, 0]\n            }\n          ]\n        }\n \n        },\n        {\n            \"versionUrn\": \"urn:adsk.wipprod:fs.file:vf.9FVvCp9mSQaMP4mY2lFRFQ?version=1\",\n             \"query\": {\n          \"$and\": [\n            {\n              \"$gt\": [{ \"$count\": \"s.views\" }, 0]\n            }\n          ]\n        }\n \n        }        \n    ]\n}",
+									"raw": "{\n    \"versions\": [\n        {\n            \"versionUrn\": \"{{first_model_version_urn}}\",\n             \"query\": {\n          \"$and\": [\n            {\n              \"$gt\": [{ \"$count\": \"s.views\" }, 0]\n            }\n          ]\n        } \n        },\n        {\n            \"versionUrn\": \"{{second_model_version_urn}}\",\n             \"query\": {\n          \"$and\": [\n            {\n              \"$gt\": [{ \"$count\": \"s.views\" }, 0]\n            }\n          ]\n        }\n \n        }        \n    ]\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1293,30 +1636,6 @@
 							"response": []
 						},
 						{
-							"name": "DM API: GET folder/contents",
-							"request": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "{{base_domain}}/data/v1/projects/b.{{mc_container_id}}/folders/{{folderUrn}}/contents",
-									"host": [
-										"{{base_domain}}"
-									],
-									"path": [
-										"data",
-										"v1",
-										"projects",
-										"b.{{mc_container_id}}",
-										"folders",
-										"{{folderUrn}}",
-										"contents"
-									]
-								},
-								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-get-model-set-GET/\n\nGets a requested model set based on the model set’s ID."
-							},
-							"response": []
-						},
-						{
 							"name": "POST modelsets/:modelSetId/issues",
 							"event": [
 								{
@@ -1342,7 +1661,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "[\n           {\n             \"title\": \"test post modelset issue by Postman\",\n             \"description\": \"test post modelset issue by Postman\",\n             \"assignedTo\": \"200902260532621\",\n             \"assignedToType\": \"User\",\n             \"pushpin\": {\n               \"location\": {\n                 \"x\": 426.770233,\n                 \"y\": 176.688309,\n                 \"z\": 682.2887\n               },\n               \"objectId\": 22,\n               \"type\": \"TwoDVectorPushpin\",\n               \"viewerState\": {}\n             }, \n            \"issueTypeId\":\"e203c789-d165-4fe8-9b72-6306170d9451\",\n            \"issueSubTypeId\":\"4fb607b5-5a5b-46f9-bb89-4bba1725de80\",\n            \"ng_issue_type_id\": \"e203c789-d165-4fe8-9b72-6306170d9451\",\n            \"ng_issue_subtype_id\": \"4fb607b5-5a5b-46f9-bb89-4bba1725de80\",\n            \"rootCauseId\":\"8338ce72-cc83-49d7-90ca-93a3dd3d6ac7\",\n             \"screenShots\": [\n               \"{{screenshotId}}\"\n             ], \n             \"documentVersionUrn\": \"urn:adsk.wipprod:fs.file:vf.wfcW987wTMi2ZuEKr-THuw?version=1\" ,\n\n             \"viewableName\":\"{3D}\"\n           }\n         ]"
+									"raw": "[\n           {\n             \"title\": \"test post modelset issue by Postman\",\n             \"description\": \"test post modelset issue by Postman\",\n             \"assignedTo\": \"{{one_user_id}}\",\n             \"assignedToType\": \"User\",\n             \"pushpin\": {\n               \"location\": {\n                 \"x\": 426.770233,\n                 \"y\": 176.688309,\n                 \"z\": 682.2887\n               },\n               \"objectId\": 22,\n               \"type\": \"TwoDVectorPushpin\",\n               \"viewerState\": {}\n             }, \n            \"issueTypeId\":\"{{issue_type_id}}\",\n            \"issueSubTypeId\":\"{{issue_sub_type_id}}\",\n            \"ng_issue_type_id\": \"{{issue_type_id}}\",\n            \"ng_issue_subtype_id\": \"{{issue_sub_type_id}}\",\n            \"rootCauseId\":\"{{issue_root_cause_id}}\",\n             \"screenShots\": [\n               \"{{screenshotId}}\"\n             ], \n             \"documentVersionUrn\": \"{{first_model_version_urn}}\" , \n             \"viewableName\":\"{3D}\"\n           }\n         ]"
 								},
 								"url": {
 									"raw": "{{base_domain}}/{{model_set_url}}/containers/{{mc_container_id}}/modelsets/{{modelSetId}}/issues",
@@ -1356,90 +1675,6 @@
 										"modelsets",
 										"{{modelSetId}}",
 										"issues"
-									]
-								},
-								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-add-model-set-issue-POST/\n\nAdds a model set visual inspection issue, represented as a BIM360 issue.\n\n1. Firstly, by [Model Set] >> [GET modelsets/:modelSetId/versions/latest] OR [Model Set] >> [GET modelsets/:modelSetId/versions/:version], get the version URN of the models. Select one as the input of documentVersionUrn\n\n2. Secondly, by [Model Set] >> [POST modelsets/:modelSetId/screenshots], create one screenshot for this issue.\n\n3. By Pushpin tutorial ( https://forge.autodesk.com/en/docs/bim360/v1/tutorials/pushpins/), get valid location and objectId for pushpin.\nAfter posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]"
-							},
-							"response": []
-						},
-						{
-							"name": "GET issue types",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											""
-										],
-										"type": "text/javascript"
-									}
-								}
-							],
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"type": "text",
-										"value": "application/json"
-									}
-								],
-								"url": {
-									"raw": "{{base_domain}}/issues/v1/containers/{{mc_container_id}}/ng-issue-types?include=subtypes",
-									"host": [
-										"{{base_domain}}"
-									],
-									"path": [
-										"issues",
-										"v1",
-										"containers",
-										"{{mc_container_id}}",
-										"ng-issue-types"
-									],
-									"query": [
-										{
-											"key": "include",
-											"value": "subtypes"
-										}
-									]
-								},
-								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-add-model-set-issue-POST/\n\nAdds a model set visual inspection issue, represented as a BIM360 issue.\n\n1. Firstly, by [Model Set] >> [GET modelsets/:modelSetId/versions/latest] OR [Model Set] >> [GET modelsets/:modelSetId/versions/:version], get the version URN of the models. Select one as the input of documentVersionUrn\n\n2. Secondly, by [Model Set] >> [POST modelsets/:modelSetId/screenshots], create one screenshot for this issue.\n\n3. By Pushpin tutorial ( https://forge.autodesk.com/en/docs/bim360/v1/tutorials/pushpins/), get valid location and objectId for pushpin.\nAfter posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]"
-							},
-							"response": []
-						},
-						{
-							"name": "GET issue root cause",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											""
-										],
-										"type": "text/javascript"
-									}
-								}
-							],
-							"request": {
-								"method": "GET",
-								"header": [
-									{
-										"key": "Content-Type",
-										"type": "text",
-										"value": "application/json"
-									}
-								],
-								"url": {
-									"raw": "{{base_domain}}/issues/v1/containers/{{mc_container_id}}/root-causes",
-									"host": [
-										"{{base_domain}}"
-									],
-									"path": [
-										"issues",
-										"v1",
-										"containers",
-										"{{mc_container_id}}",
-										"root-causes"
 									]
 								},
 								"description": "https://forge.autodesk.com/en/docs/bim360/v1/reference/http/mc-modelset-service-v3-add-model-set-issue-POST/\n\nAdds a model set visual inspection issue, represented as a BIM360 issue.\n\n1. Firstly, by [Model Set] >> [GET modelsets/:modelSetId/versions/latest] OR [Model Set] >> [GET modelsets/:modelSetId/versions/:version], get the version URN of the models. Select one as the input of documentVersionUrn\n\n2. Secondly, by [Model Set] >> [POST modelsets/:modelSetId/screenshots], create one screenshot for this issue.\n\n3. By Pushpin tutorial ( https://forge.autodesk.com/en/docs/bim360/v1/tutorials/pushpins/), get valid location and objectId for pushpin.\nAfter posting, a job will be starting. The job id will be set to [jobId]. Check the status by the other endpoint [Model Set]>>[GET modelsets/:modelSetId/jobs/:jobId]"
